@@ -82,7 +82,7 @@
             text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.8); letter-spacing: 1px;
         }
 
-        /* ИГРОВОЙ ИНТЕРФЕЙС (СКРЫТ ДО СТАРТА) */
+        /* ИГРОВОЙ ИНТЕРФЕЙС */
         #hud-top, #action-deck, #log-box { display: none; }
 
         #hud-top {
@@ -367,7 +367,6 @@ class SoundEngine {
         }
     }
 
-    // 🎸 СИНТЕЗАТОР САУНДТРЕКА БОЕВИКА 90-Х (132 BPM ACTION OST)
     startMenuMusic() {
         this.init();
         if (!this.ctx || this.isMusicPlaying || !this.musicEnabled) return;
@@ -376,10 +375,9 @@ class SoundEngine {
         this.stepIndex = 0;
 
         const bpm = 132;
-        const stepTime = (60 / bpm) / 4; // 16th notes
+        const stepTime = (60 / bpm) / 4;
 
-        // Ритмический паттерн баса и драм-секции
-        const bassFreqs = [82.41, 82.41, 82.41, 98.00, 82.41, 82.41, 110.00, 98.00]; // E2, G2, A2 notes
+        const bassFreqs = [82.41, 82.41, 82.41, 98.00, 82.41, 82.41, 110.00, 98.00];
         const synthStabs = [164.81, 0, 196.00, 0, 220.00, 164.81, 0, 146.83];
 
         this.musicTimer = setInterval(() => {
@@ -387,7 +385,6 @@ class SoundEngine {
             const now = this.ctx.currentTime;
             const s = this.stepIndex % 16;
 
-            // 1. Тяжелая бочка (Kick Drum) на 0, 4, 8, 12
             if (s === 0 || s === 4 || s === 8 || s === 12) {
                 const kick = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -402,7 +399,6 @@ class SoundEngine {
                 kick.stop(now + 0.12);
             }
 
-            // 2. Снейр (Snare) на 4 и 12
             if (s === 4 || s === 12) {
                 const snare = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -417,7 +413,6 @@ class SoundEngine {
                 snare.stop(now + 0.1);
             }
 
-            // 3. Агрессивный перегруженный бас 90-х
             const bFreq = bassFreqs[s % bassFreqs.length];
             const bass = this.ctx.createOscillator();
             const bGain = this.ctx.createGain();
@@ -440,7 +435,6 @@ class SoundEngine {
             bass.start(now);
             bass.stop(now + stepTime * 0.9);
 
-            // 4. Металлический рифф / стаб
             const leadFreq = synthStabs[s % synthStabs.length];
             if (leadFreq > 0 && s % 2 === 0) {
                 const lead = this.ctx.createOscillator();
@@ -882,12 +876,13 @@ let isAnimating = false;
 let isGameStarted = false;
 let pendingMoveTile = null;
 
-function findPath(startX, startZ, targetX, targetZ, movingUnit) {
+// 🎯 ИСПРАВЛЕННЫЙ ПОИСК ПУТИ (Поддерживает движение к занятой цели)
+function findPath(startX, startZ, targetX, targetZ, movingUnit, allowTargetOccupied = false) {
     if (startX === targetX && startZ === targetZ) return [];
     if (gridTiles[targetX][targetZ].userData.blocked) return null;
 
     const targetOccupied = units.some(u => u !== movingUnit && u.hp > 0 && u.gridX === targetX && u.gridZ === targetZ);
-    if (targetOccupied) return null;
+    if (targetOccupied && !allowTargetOccupied) return null;
 
     const queue = [[{ x: startX, z: startZ }]];
     const visited = new Set();
@@ -913,7 +908,10 @@ function findPath(startX, startZ, targetX, targetZ, movingUnit) {
                     const isCover = gridTiles[nx][nz].userData.blocked;
                     const isOccupied = units.some(u => u !== movingUnit && u.hp > 0 && u.gridX === nx && u.gridZ === nz);
 
-                    if (!isCover && !isOccupied) {
+                    const isTargetTile = (nx === targetX && nz === targetZ);
+                    const canWalk = !isCover && (!isOccupied || (isTargetTile && allowTargetOccupied));
+
+                    if (canWalk) {
                         visited.add(key);
                         queue.push([...path, { x: nx, z: nz }]);
                     }
@@ -1034,7 +1032,8 @@ class Unit {
     }
 
     async animateMoveTo(targetX, targetZ) {
-        const path = findPath(this.gridX, this.gridZ, targetX, targetZ, this);
+        // При обычном движении игрока целевая клетка не должна быть занята
+        const path = findPath(this.gridX, this.gridZ, targetX, targetZ, this, false);
         if (!path || path.length > this.ap) return false;
 
         isAnimating = true;
@@ -1299,7 +1298,7 @@ document.getElementById('btn-back-to-primary').addEventListener('click', () => {
 document.querySelectorAll('.btn-select-char').forEach(btn => {
     btn.addEventListener('click', (e) => {
         sounds.playClick();
-        sounds.stopMenuMusic(); // Остановка музыки при старте боя
+        sounds.stopMenuMusic();
 
         const chosenChar = e.currentTarget.getAttribute('data-char');
 
@@ -1384,7 +1383,7 @@ function onPointerDown(event) {
             const tileX = hit.object.userData.gridX;
             const tileZ = hit.object.userData.gridZ;
 
-            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, tileX, tileZ, selectedUnit);
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, tileX, tileZ, selectedUnit, false);
             if (path && path.length > 0 && path.length <= selectedUnit.ap) {
                 sounds.playClick();
                 closeTargetPanel();
@@ -1575,6 +1574,7 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', async () =>
     isAnimating = false;
 });
 
+// 🧠 УЛУЧШЕННЫЙ ЛОГИЧЕСКИЙ БЛОК ИИ (Сближение и Атака)
 async function runEnemyAI() {
     if (!isGameStarted || isGameOver || isAnimating) return;
 
@@ -1606,7 +1606,10 @@ async function runEnemyAI() {
 
             const distToPlayer = Math.abs(enemyUnit.gridX - playerUnit.gridX) + Math.abs(enemyUnit.gridZ - playerUnit.gridZ);
             const blocked = isLineBlockedByCover(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ);
-            const hasVision = !blocked && distToPlayer <= 6;
+            
+            // Если игрок уже обнаружен, видимость сохраняется на большее расстояние (до 12 клеток)
+            const detectLimit = enemyUnit.hasSpottedPlayer ? 12 : 8;
+            const hasVision = !blocked && distToPlayer <= detectLimit;
 
             if (hasVision) {
                 if (!enemyUnit.hasSpottedPlayer) {
@@ -1616,14 +1619,10 @@ async function runEnemyAI() {
                 }
                 enemyUnit.lastKnownPos = { x: playerUnit.gridX, z: playerUnit.gridZ };
                 enemyUnit.patrolTarget = null;
-            } else {
-                if (enemyUnit.hasSpottedPlayer && !enemyUnit.lastKnownPos) {
-                    addLog(`${enemyUnit.name} потеряла ${playerUnit.name} из виду! Начинает патрулирование...`, 'enemy');
-                    enemyUnit.hasSpottedPlayer = false;
-                }
             }
 
             if (hasVision) {
+                // 1. Если вплотную (1 клетка) — бьет в ближнем бою
                 if (distToPlayer === 1 && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const damage = Math.floor(Math.random() * 3) + 4;
@@ -1634,6 +1633,7 @@ async function runEnemyAI() {
                     addLog(`${enemyUnit.name.toUpperCase()} НАНОСИТ УДАР ВПЛОТНУЮ! ${playerUnit.name} получил ${damage} урона!`, 'enemy');
                     await playerUnit.takeDamage(damage);
                 }
+                // 2. Если в зоне выстрела (<= 4 клеток) — стреляет
                 else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const calc = calculateHitChance(enemyUnit, playerUnit);
@@ -1653,10 +1653,12 @@ async function runEnemyAI() {
                         addLog(`${enemyUnit.name} выстрелила и промахнулась!`, 'player');
                     }
                 }
+                // 3. Вне дальности стрельбы (> 4 клеток) — сокращает дистанцию, двигаясь к игроку!
                 else if (enemyUnit.ap >= 1) {
-                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ, enemyUnit);
+                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ, enemyUnit, true);
                     if (path && path.length > 0) {
-                        await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                        // Делает 1 шаг ближе к игроку
+                        await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
                     } else {
                         break;
                     }
@@ -1665,31 +1667,33 @@ async function runEnemyAI() {
                 }
             }
             else {
+                // Игрока не видно или перекрыто укрытием: идём к последней точечной позиции
                 if (enemyUnit.lastKnownPos) {
                     if (enemyUnit.gridX === enemyUnit.lastKnownPos.x && enemyUnit.gridZ === enemyUnit.lastKnownPos.z) {
-                        addLog(`${enemyUnit.name} обыскала точку [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}] — цели здесь нет!`, 'enemy');
+                        addLog(`${enemyUnit.name} обыскала точку [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}] — цели нет!`, 'enemy');
                         enemyUnit.lastKnownPos = null;
                         enemyUnit.hasSpottedPlayer = false;
                     } else {
-                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.lastKnownPos.x, enemyUnit.lastKnownPos.z, enemyUnit);
+                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.lastKnownPos.x, enemyUnit.lastKnownPos.z, enemyUnit, true);
                         if (path && path.length > 0) {
-                            addLog(`${enemyUnit.name} проверяет последнюю позицию цели [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}]...`, 'enemy');
-                            await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                            addLog(`${enemyUnit.name} идет к последней позиции цели [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}]...`, 'enemy');
+                            await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
                         } else {
                             enemyUnit.lastKnownPos = null;
                         }
                     }
                 }
                 else {
+                    // Патрулирование свободного сектора
                     if (!enemyUnit.patrolTarget || (enemyUnit.gridX === enemyUnit.patrolTarget.x && enemyUnit.gridZ === enemyUnit.patrolTarget.z)) {
                         enemyUnit.patrolTarget = getNewPatrolTarget(enemyUnit);
                     }
 
                     if (enemyUnit.patrolTarget) {
-                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.patrolTarget.x, enemyUnit.patrolTarget.z, enemyUnit);
+                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.patrolTarget.x, enemyUnit.patrolTarget.z, enemyUnit, false);
                         if (path && path.length > 0) {
                             addLog(`${enemyUnit.name} патрулирует сектор [${path[0].x}, ${path[0].z}]...`, 'enemy');
-                            await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                            await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
                         } else {
                             enemyUnit.patrolTarget = null;
                         }
@@ -1713,6 +1717,49 @@ async function runEnemyAI() {
         addLog('Ваш ход! AP восстановлены.', 'player');
     }
 }
+
+// Вспомогательный метод пошагового перемещения юнитов ИИ
+Unit.prototype.animateMoveToStep = async function(stepX, stepZ) {
+    isAnimating = true;
+    this.ap -= 1;
+
+    const startPos = this.mesh.position.clone();
+    const endPos = new THREE.Vector3(stepX * TILE_SIZE, 0, stepZ * TILE_SIZE);
+
+    const dx = stepX * TILE_SIZE - startPos.x;
+    const dz = stepZ * TILE_SIZE - startPos.z;
+    this.mesh.rotation.y = Math.atan2(dx, dz);
+
+    sounds.playStep();
+
+    const duration = 200;
+    const startTime = performance.now();
+
+    await new Promise(resolve => {
+        const animateStep = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            this.mesh.position.lerpVectors(startPos, endPos, progress);
+            this.mesh.position.y = Math.sin(progress * Math.PI) * 0.22;
+
+            if (progress < 1) {
+                requestAnimationFrame(animateStep);
+            } else {
+                this.mesh.position.y = 0;
+                resolve();
+            }
+        };
+        requestAnimationFrame(animateStep);
+    });
+
+    this.gridX = stepX;
+    this.gridZ = stepZ;
+
+    updateUI();
+    highlightMoveRange();
+    isAnimating = false;
+};
 
 document.getElementById('end-turn-btn').addEventListener('click', () => {
     sounds.playClick();
@@ -1775,7 +1822,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('menu-primary').style.display = 'block';
     document.getElementById('main-menu').style.display = 'flex';
 
-    sounds.startMenuMusic(); // Возобновление музыки при возврате в меню
+    sounds.startMenuMusic();
 });
 
 function highlightMoveRange() {
@@ -1791,7 +1838,7 @@ function highlightMoveRange() {
         for (let z = 0; z < GRID_SIZE; z++) {
             if (x === selectedUnit.gridX && z === selectedUnit.gridZ) continue;
 
-            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, x, z, selectedUnit);
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, x, z, selectedUnit, false);
             if (path && path.length <= selectedUnit.ap) {
                 gridTiles[x][z].material.color.setHex(0x1e4a2c);
             }
