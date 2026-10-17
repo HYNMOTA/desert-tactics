@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Tactical HUD</title>
+    <title>HYNMOTA: Animated Tactics 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -19,7 +19,7 @@
             padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
         }
 
-        /* МОДАЛЬНОЕ ОКНО */
+        /* МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
             background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
@@ -62,17 +62,17 @@
         .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
         .ap-dot.empty { background: #1a221b; border-color: #334435; box-shadow: none; }
 
-        /* ОКНО АТАКИ */
+        /* КАРТОЧКА ПРОТИВНИКА */
         #target-panel {
-            position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
-            display: none; background: rgba(20, 8, 8, 0.92); backdrop-filter: blur(6px); border: 1px solid #ff3333;
-            border-top: 3px solid #ff5964; border-radius: 6px; padding: 12px 24px; text-align: center; pointer-events: auto;
-            box-shadow: 0 8px 30px rgba(255,0,0,0.25); min-width: 260px;
+            position: absolute; bottom: 95px; right: 20px; top: auto; left: auto; transform: none; z-index: 10;
+            display: none; background: rgba(18, 10, 8, 0.94); backdrop-filter: blur(8px); border: 1px solid #ff3333;
+            border-right: 3px solid #ff5964; border-radius: 6px; padding: 14px 20px; text-align: left; pointer-events: auto;
+            box-shadow: -5px 8px 25px rgba(0,0,0,0.85); min-width: 270px;
         }
         #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .hit-rate { font-size: 16px; font-weight: bold; color: #00ff66; margin: 6px 0; }
+        .hit-rate { font-size: 15px; font-weight: bold; color: #00ff66; margin: 6px 0; }
 
-        /* НИЖНИЙ КОМАНДНЫЙ ФРЕЙМ (ACTION DECK) */
+        /* НИЖНИЙ КОМАНДНЫЙ ФРЕЙМ */
         #action-deck {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
             pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -90,14 +90,16 @@
         
         .btn-act {
             background: linear-gradient(180deg, #2b2015 0%, #17110b 100%);
-            border: 1px solid #8b6d43; color: #ffd89b; padding: 12px 16px;
+            border: 1px solid #8b6d43; color: #ffd89b; padding: 11px 16px;
             font-family: inherit; font-size: 12px; font-weight: bold; border-radius: 5px;
-            cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+            cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
             transition: all 0.15s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .btn-act:hover:not(:disabled) { border-color: #ff9d00; color: #fff; box-shadow: 0 0 12px rgba(255,157,0,0.4); transform: translateY(-1px); }
         .btn-act:active:not(:disabled) { transform: translateY(1px); }
         .btn-act:disabled { opacity: 0.35; cursor: not-allowed; border-color: #443523; }
+
+        .icon-svg { width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; }
 
         .btn-shoot-theme { border-color: #ff3333; color: #ffcccc; background: linear-gradient(180deg, #421212 0%, #200808 100%); }
         .btn-shoot-theme:hover:not(:disabled) { border-color: #ff6666; box-shadow: 0 0 12px rgba(255,51,51,0.5); }
@@ -185,7 +187,7 @@
         </div>
     </div>
 
-    <!-- ЦЕЛЬ -->
+    <!-- КАРТОЧКА ЦЕЛИ -->
     <div id="target-panel">
         <h3 id="target-name">Цель: Рева</h3>
         <div class="hp-container" style="margin: 8px 0;">
@@ -201,8 +203,8 @@
 
     <!-- ЛОГ БОЯ -->
     <div id="log-box">
-        <div class="log-entry">Тактический интерфейс запущен.</div>
-        <div class="log-entry">Клики по UI изолированы от карты.</div>
+        <div class="log-entry">Анимационный движок активирован.</div>
+        <div class="log-entry">Действия персонажей анимированы.</div>
     </div>
 
     <!-- НИЖНЯЯ КОМАНДНАЯ ПАНЕЛЬ -->
@@ -211,14 +213,16 @@
             <div class="btn-slot">
                 <span class="key-hint">[1]</span>
                 <button class="btn-act btn-melee-theme" id="melee-btn">
-                    ⚔️ Ближний бой <span class="cost-badge">-2 AP</span>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.5 17.5L9.5 2.5L13.5 7.5L18 9L14.5 17.5Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 19L8.5 15.5" stroke="currentColor" stroke-width="2"/><circle cx="5" cy="19" r="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    Ближний бой <span class="cost-badge">-2 AP</span>
                 </button>
             </div>
 
             <div class="btn-slot">
                 <span class="key-hint">[2]</span>
                 <button class="btn-act btn-ability-theme" id="cyber-pulse-btn">
-                    ⚡ Кибер-Импульс <span class="cost-badge">-2 AP</span>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    Кибер-Импульс <span class="cost-badge">-2 AP</span>
                 </button>
             </div>
 
@@ -584,6 +588,7 @@ let selectedUnit = null;
 let currentTarget = null;
 let isEnemyTurn = false;
 let isGameOver = false;
+let isAnimating = false; // Флаг блокировки ввода во время анимаций
 
 class Unit {
     constructor(name, className, x, z, hp, maxAp, isEnemy, visorColor = 0x00ff66, bodyColor = 0x4a2a2a) {
@@ -624,30 +629,187 @@ class Unit {
         scene.add(this.mesh);
     }
 
-    moveTo(x, z) {
-        const distance = Math.abs(this.gridX - x) + Math.abs(this.gridZ - z);
-        if (this.ap >= distance && !gridTiles[x][z].userData.blocked) {
-            this.gridX = x;
-            this.gridZ = z;
-            this.ap -= distance;
-            
-            sounds.playStep();
-            this.mesh.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
-            closeTargetPanel();
-            updateUI();
-            highlightMoveRange();
-            addLog(`${this.name} шагнул на [${x}, ${z}] (-${distance} AP)`, this.isEnemy ? 'enemy' : 'player');
-            return true;
+    // 🚶 ПЛАВНАЯ АНИМАЦИЯ ХОДЬБЫ ПО КЛЕТКАМ
+    async animateMoveTo(targetX, targetZ) {
+        const distance = Math.abs(this.gridX - targetX) + Math.abs(this.gridZ - targetZ);
+        if (this.ap < distance || gridTiles[targetX][targetZ].userData.blocked) return false;
+
+        isAnimating = true;
+        this.ap -= distance;
+
+        // Генерация пошагового пути (сначала по X, потом по Z)
+        const path = [];
+        let currX = this.gridX;
+        let currZ = this.gridZ;
+
+        while (currX !== targetX) {
+            currX += Math.sign(targetX - currX);
+            path.push({ x: currX, z: currZ });
         }
-        return false;
+        while (currZ !== targetZ) {
+            currZ += Math.sign(targetZ - currZ);
+            path.push({ x: currX, z: currZ });
+        }
+
+        for (let step of path) {
+            const startPos = this.mesh.position.clone();
+            const endPos = new THREE.Vector3(step.x * TILE_SIZE, 0, step.z * TILE_SIZE);
+
+            // Поворот в сторону движения
+            const dx = step.x * TILE_SIZE - startPos.x;
+            const dz = step.z * TILE_SIZE - startPos.z;
+            this.mesh.rotation.y = Math.atan2(dx, dz);
+
+            sounds.playStep();
+
+            const duration = 220; // мс на одну клетку
+            const startTime = performance.now();
+
+            await new Promise(resolve => {
+                const animateStep = (now) => {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Интерполяция координат + Пошаговое подпрыгивание (Bobbing)
+                    this.mesh.position.lerpVectors(startPos, endPos, progress);
+                    this.mesh.position.y = Math.sin(progress * Math.PI) * 0.22;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animateStep);
+                    } else {
+                        this.mesh.position.y = 0;
+                        resolve();
+                    }
+                };
+                requestAnimationFrame(animateStep);
+            });
+
+            this.gridX = step.x;
+            this.gridZ = step.z;
+        }
+
+        closeTargetPanel();
+        updateUI();
+        highlightMoveRange();
+        addLog(`${this.name} переместился на [${targetX}, ${targetZ}] (-${distance} AP)`, this.isEnemy ? 'enemy' : 'player');
+        
+        isAnimating = false;
+        return true;
     }
 
-    takeDamage(amount) {
+    // 💥 АНИМАЦИЯ ОТДАЧИ ПРИ ВЫСТРЕЛЕ
+    async animateRecoil(targetPos) {
+        const startPos = this.mesh.position.clone();
+        const dir = new THREE.Vector3().subVectors(targetPos, startPos).normalize();
+        const recoilPos = startPos.clone().sub(dir.multiplyScalar(0.35)); // Откат назад
+
+        this.mesh.rotation.y = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
+
+        const startTime = performance.now();
+        await new Promise(r => {
+            const anim = (now) => {
+                const p = Math.min((now - startTime) / 120, 1);
+                if (p < 0.5) this.mesh.position.lerpVectors(startPos, recoilPos, p * 2);
+                else this.mesh.position.lerpVectors(recoilPos, startPos, (p - 0.5) * 2);
+
+                if (p < 1) requestAnimationFrame(anim);
+                else { this.mesh.position.copy(startPos); r(); }
+            };
+            requestAnimationFrame(anim);
+        });
+    }
+
+    // ⚔️ АНИМАЦИЯ ВЫПАДА В БЛИЖНЕМ БОЮ
+    async animateMeleeLunge(targetPos) {
+        const startPos = this.mesh.position.clone();
+        const lungePos = new THREE.Vector3().lerpVectors(startPos, targetPos, 0.65); // Рывок на 65% расстояния
+
+        this.mesh.rotation.y = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
+
+        const startTime = performance.now();
+        await new Promise(r => {
+            const anim = (now) => {
+                const p = Math.min((now - startTime) / 250, 1);
+                if (p < 0.4) {
+                    this.mesh.position.lerpVectors(startPos, lungePos, p / 0.4);
+                    this.mesh.rotation.x = 0.25; // Наклон вперед при атаке
+                } else {
+                    this.mesh.position.lerpVectors(lungePos, startPos, (p - 0.4) / 0.6);
+                    this.mesh.rotation.x = 0;
+                }
+
+                if (p < 1) requestAnimationFrame(anim);
+                else { this.mesh.position.copy(startPos); this.mesh.rotation.x = 0; r(); }
+            };
+            requestAnimationFrame(anim);
+        });
+    }
+
+    // ⚡ АНИМАЦИЯ КИБЕР-ИМПУЛЬСА (ПРИДЕМ/УДАР)
+    async animateCyberPulse() {
+        const startY = this.mesh.position.y;
+        const startTime = performance.now();
+
+        await new Promise(r => {
+            const anim = (now) => {
+                const p = Math.min((now - startTime) / 350, 1);
+                if (p < 0.5) this.mesh.position.y = startY + Math.sin(p * Math.PI) * 0.8; // Взлет
+                else this.mesh.position.y = startY + (1 - p) * 0.8; // Резкое заземление
+
+                if (p < 1) requestAnimationFrame(anim);
+                else { this.mesh.position.y = startY; r(); }
+            };
+            requestAnimationFrame(anim);
+        });
+    }
+
+    // 🩸 АНИМАЦИЯ ПОЛУЧЕНИЯ УРОНА И ТРЯСКИ
+    async animateTakeDamage() {
         sounds.playHit();
+        const startPos = this.mesh.position.clone();
+        const startTime = performance.now();
+
+        await new Promise(r => {
+            const anim = (now) => {
+                const p = Math.min((now - startTime) / 200, 1);
+                if (p < 1) {
+                    this.mesh.position.x = startPos.x + (Math.random() - 0.5) * 0.25;
+                    this.mesh.position.z = startPos.z + (Math.random() - 0.5) * 0.25;
+                    requestAnimationFrame(anim);
+                } else {
+                    this.mesh.position.copy(startPos);
+                    r();
+                }
+            };
+            requestAnimationFrame(anim);
+        });
+    }
+
+    // ☠️ АНИМАЦИЯ ПАДЕНИЯ И СМЕРТИ
+    async animateDeath() {
+        const startTime = performance.now();
+        await new Promise(r => {
+            const anim = (now) => {
+                const p = Math.min((now - startTime) / 600, 1);
+                this.mesh.rotation.z = p * (Math.PI / 2); // Падение на бок
+                this.mesh.position.y = -p * 0.5; // Уход под землю
+
+                if (p < 1) requestAnimationFrame(anim);
+                else r();
+            };
+            requestAnimationFrame(anim);
+        });
+        scene.remove(this.mesh);
+    }
+
+    async takeDamage(amount) {
         this.hp -= amount;
+        await this.animateTakeDamage();
+
         if (this.hp <= 0) {
             this.hp = 0;
-            scene.remove(this.mesh);
+            await this.animateDeath();
+
             const index = units.indexOf(this);
             if (index > -1) units.splice(index, 1);
             
@@ -667,6 +829,7 @@ class Unit {
         this.gridX = this.startX;
         this.gridZ = this.startZ;
         this.isStunned = false;
+        this.mesh.rotation.set(0, 0, 0);
         this.mesh.position.set(this.startX * TILE_SIZE, 0, this.startZ * TILE_SIZE);
         scene.add(this.mesh);
     }
@@ -747,14 +910,12 @@ function calculateHitChance(attacker, target) {
     return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist };
 }
 
-// 🎯 ИЗОЛЯЦИЯ КЛИКОВ ПО 3D-КАРТЕ (Слушаем строго Canvas)
+// 🎯 ИЗОЛЯЦИЯ КЛИКОВ ПО 3D-КАРТЕ
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-function onPointerDown(event) {
-    if (isEnemyTurn || isGameOver) return;
-
-    // Проверка: кликнули ли именно в холст Canvas
+async function onPointerDown(event) {
+    if (isEnemyTurn || isGameOver || isAnimating) return;
     if (event.target !== renderer.domElement) return;
 
     const x = event.clientX;
@@ -781,13 +942,12 @@ function onPointerDown(event) {
         }
 
         if (hit.object.userData && hit.object.userData.isTile && selectedUnit) {
-            selectedUnit.moveTo(hit.object.userData.gridX, hit.object.userData.gridZ);
+            await selectedUnit.animateMoveTo(hit.object.userData.gridX, hit.object.userData.gridZ);
             return;
         }
     }
 }
 
-// Привязка кликов 3D строго к холсту!
 renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
 function openTargetPanel(target) {
@@ -816,9 +976,9 @@ function closeTargetPanel() {
     currentTarget = null;
 }
 
-document.getElementById('shoot-btn').addEventListener('click', () => {
+document.getElementById('shoot-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || !currentTarget || isEnemyTurn || isGameOver) return;
+    if (!selectedUnit || !currentTarget || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP! (Нужно 2 AP)', 'enemy');
@@ -831,17 +991,19 @@ document.getElementById('shoot-btn').addEventListener('click', () => {
         return;
     }
 
+    isAnimating = true;
     selectedUnit.ap -= 2;
     const roll = Math.floor(Math.random() * 100);
     const isHit = roll < calc.chance;
 
+    await selectedUnit.animateRecoil(currentTarget.mesh.position);
     spawnTracer(selectedUnit.mesh.position, currentTarget.mesh.position, isHit);
 
     if (isHit) {
         const damage = Math.floor(Math.random() * 3) + 4;
         showFloatingText(`-${damage}`, currentTarget.mesh.position, '#ff3333');
         addLog(`ПОПАДАНИЕ! ${selectedUnit.name} нанес ${damage} урона по ${currentTarget.name}!`, 'hit');
-        currentTarget.takeDamage(damage);
+        await currentTarget.takeDamage(damage);
     } else {
         showFloatingText('ПРОМАХ!', currentTarget.mesh.position, '#ffcc00');
         addLog(`${selectedUnit.name} ПРОМАХНУЛСЯ по ${currentTarget.name}!`, 'enemy');
@@ -850,11 +1012,12 @@ document.getElementById('shoot-btn').addEventListener('click', () => {
     updateUI();
     highlightMoveRange();
     if (currentTarget && currentTarget.hp > 0) openTargetPanel(currentTarget);
+    isAnimating = false;
 });
 
-document.getElementById('melee-btn').addEventListener('click', () => {
+document.getElementById('melee-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || isEnemyTurn || isGameOver) return;
+    if (!selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP для ближнего боя! (Нужно 2 AP)', 'enemy');
@@ -868,26 +1031,25 @@ document.getElementById('melee-btn').addEventListener('click', () => {
         return;
     }
 
+    isAnimating = true;
     selectedUnit.ap -= 2;
     const damage = Math.floor(Math.random() * 4) + 5;
 
-    const dx = target.gridX - selectedUnit.gridX;
-    const dz = target.gridZ - selectedUnit.gridZ;
-    selectedUnit.mesh.rotation.y = Math.atan2(dx, dz);
-
+    await selectedUnit.animateMeleeLunge(target.mesh.position);
     spawnMeleeVFX(selectedUnit.mesh.position, target.mesh.position);
     showFloatingText(`УДАР! -${damage}`, target.mesh.position, '#ff6633');
     
     addLog(`БЛИЖНИЙ БОЙ! ${selectedUnit.name} нанес ${damage} урона клинком по ${target.name}!`, 'melee');
-    target.takeDamage(damage);
+    await target.takeDamage(damage);
 
     updateUI();
     highlightMoveRange();
+    isAnimating = false;
 });
 
-document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
+document.getElementById('cyber-pulse-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || isEnemyTurn || isGameOver) return;
+    if (!selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP для Кибер-импульса!', 'enemy');
@@ -901,24 +1063,26 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
         return;
     }
 
+    isAnimating = true;
     selectedUnit.ap -= 2;
     const damage = Math.floor(Math.random() * 3) + 6;
 
+    await selectedUnit.animateCyberPulse();
     spawnCyberPulseVFX(nearbyEnemy.mesh.position);
     showFloatingText(`ОГЛУШЕНИЕ! -${damage}`, nearbyEnemy.mesh.position, '#00ccff');
     
     nearbyEnemy.isStunned = true;
     nearbyEnemy.ap = 0;
-    nearbyEnemy.takeDamage(damage);
-
     addLog(`КИБЕР-ИМПУЛЬС! ${nearbyEnemy.name} ОГЛУШЕНА (-${damage} HP)!`, 'ability');
+    await nearbyEnemy.takeDamage(damage);
 
     updateUI();
     highlightMoveRange();
+    isAnimating = false;
 });
 
 async function runEnemyAI() {
-    if (isGameOver) return;
+    if (isGameOver || isAnimating) return;
 
     isEnemyTurn = true;
     closeTargetPanel();
@@ -941,7 +1105,7 @@ async function runEnemyAI() {
 
         enemyUnit.ap = enemyUnit.maxAp;
 
-        const stepTowardsPlayer = () => {
+        const stepTowardsPlayer = async () => {
             const dx = yakub.gridX - enemyUnit.gridX;
             const dz = yakub.gridZ - enemyUnit.gridZ;
             let targetX = enemyUnit.gridX;
@@ -954,7 +1118,7 @@ async function runEnemyAI() {
             }
 
             if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
-                return enemyUnit.moveTo(targetX, targetZ);
+                return await enemyUnit.animateMoveTo(targetX, targetZ);
             } else {
                 targetX = enemyUnit.gridX;
                 targetZ = enemyUnit.gridZ;
@@ -962,14 +1126,14 @@ async function runEnemyAI() {
                 else if (dx !== 0) targetX += Math.sign(dx);
 
                 if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
-                    return enemyUnit.moveTo(targetX, targetZ);
+                    return await enemyUnit.animateMoveTo(targetX, targetZ);
                 }
             }
             return false;
         };
 
         while (enemyUnit.ap > 0 && yakub.hp > 0 && !isGameOver) {
-            await new Promise(r => setTimeout(r, 700));
+            await new Promise(r => setTimeout(r, 500));
 
             const distToPlayer = Math.abs(enemyUnit.gridX - yakub.gridX) + Math.abs(enemyUnit.gridZ - yakub.gridZ);
 
@@ -977,13 +1141,14 @@ async function runEnemyAI() {
                 enemyUnit.ap -= 2;
                 const damage = Math.floor(Math.random() * 3) + 4;
 
+                await enemyUnit.animateMeleeLunge(yakub.mesh.position);
                 spawnMeleeVFX(enemyUnit.mesh.position, yakub.mesh.position);
                 showFloatingText(`УДАР! -${damage}`, yakub.mesh.position, '#ff5964');
                 addLog(`РЕВА НАНОСИТ УДАР ВПЛОТНУЮ! Якуб получил ${damage} урона!`, 'enemy');
-                yakub.takeDamage(damage);
+                await yakub.takeDamage(damage);
             }
             else if (distToPlayer > 1 && enemyUnit.ap >= 1 && (distToPlayer > MAX_SHOOT_RANGE || enemyUnit.ap % 2 !== 0 || Math.random() > 0.4)) {
-                const moved = stepTowardsPlayer();
+                const moved = await stepTowardsPlayer();
                 if (!moved) {
                     if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                         enemyUnit.ap -= 2;
@@ -991,14 +1156,14 @@ async function runEnemyAI() {
                         const roll = Math.floor(Math.random() * 100);
                         const isHit = roll < calc.chance;
 
-                        enemyUnit.mesh.rotation.y = Math.atan2(yakub.gridX - enemyUnit.gridX, yakub.gridZ - enemyUnit.gridZ);
+                        await enemyUnit.animateRecoil(yakub.mesh.position);
                         spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
 
                         if (isHit) {
                             const damage = Math.floor(Math.random() * 3) + 3;
                             showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
                             addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
-                            yakub.takeDamage(damage);
+                            await yakub.takeDamage(damage);
                         } else {
                             showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
                             addLog(`Рева выстрелила и промахнулась!`, 'player');
@@ -1015,14 +1180,14 @@ async function runEnemyAI() {
                 const roll = Math.floor(Math.random() * 100);
                 const isHit = roll < calc.chance;
 
-                enemyUnit.mesh.rotation.y = Math.atan2(yakub.gridX - enemyUnit.gridX, yakub.gridZ - enemyUnit.gridZ);
+                await enemyUnit.animateRecoil(yakub.mesh.position);
                 spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
 
                 if (isHit) {
                     const damage = Math.floor(Math.random() * 3) + 3;
                     showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
                     addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
-                    yakub.takeDamage(damage);
+                    await yakub.takeDamage(damage);
                 } else {
                     showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
                     addLog(`Рева выстрелила и промахнулась!`, 'player');
@@ -1049,12 +1214,11 @@ async function runEnemyAI() {
 
 document.getElementById('end-turn-btn').addEventListener('click', () => {
     sounds.playClick();
-    if (!isEnemyTurn && !isGameOver) runEnemyAI();
+    if (!isEnemyTurn && !isGameOver && !isAnimating) runEnemyAI();
 });
 
-// ГОРЯЧИЕ КЛАВИШИ С КЛАВИАТУРЫ
 window.addEventListener('keydown', (e) => {
-    if (isEnemyTurn || isGameOver) return;
+    if (isEnemyTurn || isGameOver || isAnimating) return;
     if (e.key === '1') document.getElementById('melee-btn').click();
     if (e.key === '2') document.getElementById('cyber-pulse-btn').click();
     if (e.code === 'Space') document.getElementById('end-turn-btn').click();
@@ -1088,6 +1252,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('game-over-modal').style.display = 'none';
     isGameOver = false;
     isEnemyTurn = false;
+    isAnimating = false;
 
     if (!units.includes(yakub)) units.push(yakub);
     if (!units.includes(reva)) units.push(reva);
@@ -1134,7 +1299,6 @@ function updateUI() {
         const hpPercent = Math.max(0, (selectedUnit.hp / selectedUnit.maxHp) * 100);
         document.getElementById('unit-hp-bar').style.width = `${hpPercent}%`;
 
-        // Отрисовка AP-точек
         const apContainer = document.getElementById('ap-dots-container');
         apContainer.innerHTML = '';
         for (let i = 0; i < selectedUnit.maxAp; i++) {
@@ -1143,9 +1307,8 @@ function updateUI() {
             apContainer.appendChild(dot);
         }
 
-        // Блокировка кнопок действий при нехватке AP
-        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2;
-        document.getElementById('cyber-pulse-btn').disabled = selectedUnit.ap < 2;
+        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2 || isAnimating;
+        document.getElementById('cyber-pulse-btn').disabled = selectedUnit.ap < 2 || isAnimating;
     }
 }
 updateUI();
