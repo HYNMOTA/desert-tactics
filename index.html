@@ -16,13 +16,13 @@
         #error-overlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(25, 5, 5, 0.95); color: #ff5555; font-family: monospace;
-            padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
+            padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 13px;
         }
 
         /* ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ПЕРСОНАЖА ---------------- */
         #main-menu {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500;
-            background: rgba(8, 5, 3, 0.95); backdrop-filter: blur(12px);
+            background: rgba(8, 5, 3, 0.92); backdrop-filter: blur(10px);
             display: flex; justify-content: center; align-items: center;
         }
         .menu-box {
@@ -57,7 +57,7 @@
 
         /* МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" */
         #game-over-modal {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 600;
             background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
             text-align: center;
         }
@@ -72,12 +72,13 @@
             width: 100%; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 4px;
             text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.8); letter-spacing: 1px;
         }
-        .btn-restart:active { transform: translateY(2px); }
 
-        /* ВЕРХНИЙ HUD */
+        /* ИГРОВОЙ ИНТЕРФЕЙС (СКРЫТ ДО СТАРТА) */
+        #hud-top, #action-deck, #log-box { display: none; }
+
         #hud-top {
             position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
-            pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
+            pointer-events: none; justify-content: space-between; align-items: flex-start;
         }
         .hud-panel {
             background: rgba(12, 9, 6, 0.88); backdrop-filter: blur(6px); border: 1px solid #554228;
@@ -116,7 +117,7 @@
 
         #action-deck {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
-            pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            pointer-events: auto; flex-direction: column; align-items: center; gap: 8px;
         }
         .deck-frame {
             background: rgba(12, 9, 6, 0.92); backdrop-filter: blur(8px);
@@ -180,7 +181,7 @@
 </head>
 <body>
 
-    <div id="error-overlay"><h3>ОШИБКА ОТРИСОВКИ:</h3></div>
+    <div id="error-overlay"><h3>ОШИБКА ВЫПОЛНЕНИЯ:</h3></div>
     <div id="canvas-container"></div>
     <div id="floating-text-container"></div>
 
@@ -222,7 +223,7 @@
                         <div class="char-card-stats">
                             <div><span>Здоровье:</span> <b>16 HP</b></div>
                             <div><span>Очки действий:</span> <b>4 AP</b></div>
-                            <div><span>Специфика:</span> Защита и высока выживаемость</div>
+                            <div><span>Специфика:</span> Защита и выживаемость</div>
                         </div>
                     </div>
                     <button class="btn-act btn-confirm-theme btn-select-char" data-char="reva">ВЫБРАТЬ</button>
@@ -290,7 +291,6 @@
 
     <div id="log-box">
         <div class="log-entry">Тактический интерфейс запущен.</div>
-        <div class="log-entry">Ожидание выбора оператора в Главном меню...</div>
     </div>
 
     <div id="action-deck">
@@ -323,6 +323,15 @@
     </div>
 
 <script>
+// 🛡️ ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ОШИБОК РЕНДЕРА И JS
+window.addEventListener('error', (e) => {
+    const overlay = document.getElementById('error-overlay');
+    if (overlay) {
+        overlay.style.display = 'block';
+        overlay.innerHTML += `<p style="margin:4px 0;">⚠️ Ошибка: ${e.message} (строка ${e.lineno})</p>`;
+    }
+});
+
 class SoundEngine {
     constructor() {
         this.ctx = null;
@@ -331,8 +340,10 @@ class SoundEngine {
 
     init() {
         if (!this.ctx) {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx) this.ctx = new AudioCtx();
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            } catch (err) { console.warn(err); }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
@@ -508,10 +519,17 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
+// БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ ORBITCONTROLS
+let controls = null;
+if (typeof THREE.OrbitControls !== 'undefined') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
+} else {
+    camera.position.set(9, 18, 22);
+    camera.lookAt(9, 0, 9);
+}
 
 const sunGeo = new THREE.SphereGeometry(3.5, 16, 16);
 const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe3aa });
@@ -748,7 +766,7 @@ let currentTarget = null;
 let isEnemyTurn = false;
 let isGameOver = false;
 let isAnimating = false;
-let isGameStarted = false; // ФЛАГ ЗАПУСКА ИГРЫ
+let isGameStarted = false;
 let pendingMoveTile = null;
 
 function findPath(startX, startZ, targetX, targetZ, movingUnit) {
@@ -1087,7 +1105,9 @@ class Unit {
         this.hasSpottedPlayer = false;
         this.mesh.rotation.set(0, 0, 0);
         this.mesh.position.set(this.startX * TILE_SIZE, 0, this.startZ * TILE_SIZE);
-        scene.add(this.mesh);
+        if (!scene.children.includes(this.mesh)) {
+            scene.add(this.mesh);
+        }
     }
 }
 
@@ -1098,38 +1118,40 @@ const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4
 function loadModelSafely(unitObj, modelPath, visorColor) {
     if (typeof THREE.GLTFLoader === 'undefined') return;
 
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-        modelPath,
-        (gltf) => {
-            try {
-                unitObj.mesh.clear();
-                const model = gltf.scene;
-                model.scale.set(1.1, 1.1, 1.1);
+    try {
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+            modelPath,
+            (gltf) => {
+                try {
+                    unitObj.mesh.clear();
+                    const model = gltf.scene;
+                    model.scale.set(1.1, 1.1, 1.1);
 
-                model.traverse(n => {
-                    if (n.isMesh) {
-                        n.castShadow = true;
-                        n.receiveShadow = true;
-                    }
-                });
+                    model.traverse(n => {
+                        if (n.isMesh) {
+                            n.castShadow = true;
+                            n.receiveShadow = true;
+                        }
+                    });
 
-                const box = new THREE.Box3().setFromObject(model);
-                model.position.y = -box.min.y;
+                    const box = new THREE.Box3().setFromObject(model);
+                    model.position.y = -box.min.y;
 
-                unitObj.mesh.add(model);
+                    unitObj.mesh.add(model);
 
-                const updatedBox = new THREE.Box3().setFromObject(model);
-                const headY = updatedBox.max.y * 0.85;
+                    const updatedBox = new THREE.Box3().setFromObject(model);
+                    const headY = updatedBox.max.y * 0.85;
 
-                const vLight = new THREE.PointLight(visorColor, 3, 3);
-                vLight.position.set(0, headY, 0.3);
-                unitObj.mesh.add(vLight);
-            } catch (err) { console.error(err); }
-        },
-        null,
-        () => { addLog(`Загрузка ${modelPath}: используется 3D-аватар.`, 'player'); }
-    );
+                    const vLight = new THREE.PointLight(visorColor, 3, 3);
+                    vLight.position.set(0, headY, 0.3);
+                    unitObj.mesh.add(vLight);
+                } catch (err) { console.warn(err); }
+            },
+            null,
+            () => { addLog(`Файл ${modelPath} не найден: используется 3D-аватар.`, 'player'); }
+        );
+    } catch (err) { console.warn(err); }
 }
 
 loadModelSafely(yakub, './models/yakub.glb', 0xff0033);
@@ -1151,7 +1173,7 @@ document.getElementById('btn-back-to-primary').addEventListener('click', () => {
 document.querySelectorAll('.btn-select-char').forEach(btn => {
     btn.addEventListener('click', (e) => {
         sounds.playClick();
-        const chosenChar = e.target.getAttribute('data-char');
+        const chosenChar = e.currentTarget.getAttribute('data-char');
 
         units = [];
         if (chosenChar === 'yakub') {
@@ -1176,6 +1198,10 @@ document.querySelectorAll('.btn-select-char').forEach(btn => {
         reva.resetUnit();
 
         document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('hud-top').style.display = 'flex';
+        document.getElementById('action-deck').style.display = 'flex';
+        document.getElementById('log-box').style.display = 'block';
+
         isGameStarted = true;
         isGameOver = false;
         isEnemyTurn = false;
@@ -1212,7 +1238,7 @@ function onPointerDown(event) {
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     for (let hit of intersects) {
-        let parentGroup = hit.object.parent;
+        let parentGroup = hit.object;
         while (parentGroup && !parentGroup.userData.unit) parentGroup = parentGroup.parent;
 
         if (parentGroup && parentGroup.userData.unit) {
@@ -1285,7 +1311,7 @@ function openTargetPanel(target) {
         document.getElementById('hit-chance').style.color = '#ff5964';
         shootBtn.disabled = true;
     } else {
-        document.getElementById('hit-chance').innerText = `Шанс: ${calc.chance}\% (Дист: ${calc.distance} кл.)`;
+        document.getElementById('hit-chance').innerText = `Шанс: ${calc.chance}% (Дист: ${calc.distance} кл.)`;
         document.getElementById('hit-chance').style.color = '#00ff66';
         shootBtn.disabled = false;
     }
@@ -1492,4 +1518,208 @@ async function runEnemyAI() {
                     if (isHit) {
                         const damage = Math.floor(Math.random() * 3) + 3;
                         showFloatingText(`-${damage}`, playerUnit.mesh.position, '#ff3333');
-                        addLog(`${enemyUnit.name.toUpperCase()} СТРЕЛЯЕТ
+                        addLog(`${enemyUnit.name.toUpperCase()} СТРЕЛЯЕТ! Попадание по ${playerUnit.name} (-${damage} HP)!`, 'enemy');
+                        await playerUnit.takeDamage(damage);
+                    } else {
+                        showFloatingText('ПРОМАХ!', playerUnit.mesh.position, '#ffcc00');
+                        addLog(`${enemyUnit.name} выстрелила и промахнулась!`, 'player');
+                    }
+                }
+                else if (enemyUnit.ap >= 1) {
+                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ, enemyUnit);
+                    if (path && path.length > 0) {
+                        await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            else {
+                if (enemyUnit.lastKnownPos) {
+                    if (enemyUnit.gridX === enemyUnit.lastKnownPos.x && enemyUnit.gridZ === enemyUnit.lastKnownPos.z) {
+                        addLog(`${enemyUnit.name} обыскала точку [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}] — цели здесь нет!`, 'enemy');
+                        enemyUnit.lastKnownPos = null;
+                        enemyUnit.hasSpottedPlayer = false;
+                    } else {
+                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.lastKnownPos.x, enemyUnit.lastKnownPos.z, enemyUnit);
+                        if (path && path.length > 0) {
+                            addLog(`${enemyUnit.name} проверяет последнюю позицию цели [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}]...`, 'enemy');
+                            await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                        } else {
+                            enemyUnit.lastKnownPos = null;
+                        }
+                    }
+                }
+                else {
+                    if (!enemyUnit.patrolTarget || (enemyUnit.gridX === enemyUnit.patrolTarget.x && enemyUnit.gridZ === enemyUnit.patrolTarget.z)) {
+                        enemyUnit.patrolTarget = getNewPatrolTarget(enemyUnit);
+                    }
+
+                    if (enemyUnit.patrolTarget) {
+                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.patrolTarget.x, enemyUnit.patrolTarget.z, enemyUnit);
+                        if (path && path.length > 0) {
+                            addLog(`${enemyUnit.name} патрулирует сектор [${path[0].x}, ${path[0].z}]...`, 'enemy');
+                            await enemyUnit.animateMoveTo(path[0].x, path[0].z);
+                        } else {
+                            enemyUnit.patrolTarget = null;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!isGameOver) {
+        isEnemyTurn = false;
+        document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
+        document.getElementById('turn-display').style.color = '#ff9d00';
+        document.getElementById('end-turn-btn').disabled = false;
+
+        if (selectedUnit) selectedUnit.ap = selectedUnit.maxAp;
+        updateUI();
+        highlightMoveRange();
+        addLog('Ваш ход! AP восстановлены.', 'player');
+    }
+}
+
+document.getElementById('end-turn-btn').addEventListener('click', () => {
+    sounds.playClick();
+    if (isGameStarted && !isEnemyTurn && !isGameOver && !isAnimating) runEnemyAI();
+});
+
+window.addEventListener('keydown', (e) => {
+    if (!isGameStarted || isEnemyTurn || isGameOver || isAnimating) return;
+
+    if (e.key === 'Enter') {
+        if (pendingMoveTile) executeConfirmedMove();
+        else if (currentTarget) document.getElementById('shoot-btn').click();
+    }
+    if (e.key === 'Escape') {
+        cancelPendingAction();
+        closeTargetPanel();
+    }
+    if (e.key === '1') document.getElementById('melee-btn').click();
+    if (e.key === '2') document.getElementById('cyber-pulse-btn').click();
+    if (e.code === 'Space') document.getElementById('end-turn-btn').click();
+});
+
+function triggerGameOver(isVictory) {
+    isGameOver = true;
+    closeTargetPanel();
+    cancelPendingAction();
+
+    const modal = document.getElementById('game-over-modal');
+    const title = document.getElementById('modal-title');
+    const msg = document.getElementById('modal-msg');
+
+    if (isVictory) {
+        sounds.playVictory();
+        title.innerText = 'ПОБЕДА!';
+        title.style.color = '#00ff66';
+        msg.innerText = 'Противник повержен! Сектор под вашим контролем.';
+    } else {
+        sounds.playDefeat();
+        title.innerText = 'ПОРАЖЕНИЕ';
+        title.style.color = '#ff3333';
+        msg.innerText = 'Ваш оператор пал в бою... Миссия провалена.';
+    }
+
+    modal.style.display = 'flex';
+}
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+    sounds.playClick();
+    document.getElementById('game-over-modal').style.display = 'none';
+    document.getElementById('hud-top').style.display = 'none';
+    document.getElementById('action-deck').style.display = 'none';
+    document.getElementById('log-box').style.display = 'none';
+
+    isGameOver = false;
+    isEnemyTurn = false;
+    isAnimating = false;
+    isGameStarted = false;
+
+    document.getElementById('menu-char-select').style.display = 'none';
+    document.getElementById('menu-primary').style.display = 'block';
+    document.getElementById('main-menu').style.display = 'flex';
+});
+
+function highlightMoveRange() {
+    for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+            gridTiles[x][z].material.color.setHex(gridTiles[x][z].userData.defaultColor);
+        }
+    }
+
+    if (!isGameStarted || !selectedUnit || selectedUnit.ap <= 0 || isEnemyTurn || isGameOver) return;
+
+    for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+            if (x === selectedUnit.gridX && z === selectedUnit.gridZ) continue;
+
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, x, z, selectedUnit);
+            if (path && path.length <= selectedUnit.ap) {
+                gridTiles[x][z].material.color.setHex(0x1e4a2c);
+            }
+        }
+    }
+}
+
+function updateUI() {
+    if (selectedUnit) {
+        document.getElementById('unit-name').innerText = selectedUnit.name;
+        document.getElementById('unit-class').innerText = selectedUnit.className;
+        document.getElementById('unit-hp-text').innerText = `${selectedUnit.hp}/${selectedUnit.maxHp}`;
+        
+        const hpPercent = Math.max(0, (selectedUnit.hp / selectedUnit.maxHp) * 100);
+        document.getElementById('unit-hp-bar').style.width = `${hpPercent}%`;
+
+        const apContainer = document.getElementById('ap-dots-container');
+        apContainer.innerHTML = '';
+        for (let i = 0; i < selectedUnit.maxAp; i++) {
+            const dot = document.createElement('div');
+            dot.className = `ap-dot ${i < selectedUnit.ap ? '' : 'empty'}`;
+            apContainer.appendChild(dot);
+        }
+
+        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2 || isAnimating;
+        document.getElementById('cyber-pulse-btn').disabled = selectedUnit.ap < 2 || isAnimating;
+    }
+}
+
+function addLog(text, type = '') {
+    const logBox = document.getElementById('log-box');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerText = `> ${text}`;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ПРИНУДИТЕЛЬНЫЙ ПЕРВЫЙ КАДР И ЦИКЛ РЕНДЕРИНГА
+function animate() {
+    requestAnimationFrame(animate);
+
+    animatedBeacons.forEach(b => {
+        b.angle += 0.04;
+        b.target.position.x = Math.cos(b.angle) * 3;
+        b.target.position.z = Math.sin(b.angle) * 3;
+    });
+
+    if (controls) controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
