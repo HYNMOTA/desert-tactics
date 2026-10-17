@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Tactical Cover & LOS Engine 3D</title>
+    <title>HYNMOTA: Tactical Sunlight & Beacons 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -201,8 +201,8 @@
     </div>
 
     <div id="log-box">
-        <div class="log-entry">Система укрытий и физика коллизий обновлены.</div>
-        <div class="log-entry">Сквозной проход и стрельба через укрытия заблокированы.</div>
+        <div class="log-entry">Глобальный свет Пустоши и сигнальные прожекторы подключены.</div>
+        <div class="log-entry">Сигналы SOS вращаются на высотных баррикадах.</div>
     </div>
 
     <div id="action-deck">
@@ -405,8 +405,9 @@ const TILE_SIZE = 2;
 const MAX_SHOOT_RANGE = 4;
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x16100a);
-scene.fog = new THREE.FogExp2(0x16100a, 0.022);
+// ☀️ ГЛОБАЛЬНАЯ АТМОСФЕРА ПУСТОШИ (ПЕСЧАНОЕ НЕБО И ТУМАН)
+scene.background = new THREE.Color(0x302014);
+scene.fog = new THREE.FogExp2(0x302014, 0.018);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(10, 16, 20);
@@ -425,17 +426,31 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
 
-const ambientLight = new THREE.AmbientLight(0xd4a359, 0.6);
-scene.add(ambientLight);
+// ☀️ СОЛНЕЧНЫЙ ДИСК В НЕБЕ
+const sunGeo = new THREE.SphereGeometry(3.5, 16, 16);
+const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe3aa });
+const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+sunMesh.position.set(32, 45, -15);
+scene.add(sunMesh);
 
-const sunLight = new THREE.DirectionalLight(0xffdfa9, 1.3);
-sunLight.position.set(15, 25, 10);
+// ☀️ СОЛНЕЧНЫЙ СВЕТ И НЕБЕСНОЕ ОСВЕЩЕНИЕ
+const sunLight = new THREE.DirectionalLight(0xffdfa9, 1.8);
+sunLight.position.set(32, 45, -15);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 1024;
-sunLight.shadow.mapSize.height = 1024;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 120;
+sunLight.shadow.camera.left = -15;
+sunLight.shadow.camera.right = 30;
+sunLight.shadow.camera.top = 30;
+sunLight.shadow.camera.bottom = -15;
 scene.add(sunLight);
 
-const rimLight = new THREE.DirectionalLight(0x3a556a, 0.7);
+const hemiLight = new THREE.HemisphereLight(0xffb870, 0x1a1008, 0.75);
+scene.add(hemiLight);
+
+const rimLight = new THREE.DirectionalLight(0x3a556a, 0.5);
 rimLight.position.set(-15, 12, -10);
 scene.add(rimLight);
 
@@ -472,7 +487,10 @@ const previewMarker = new THREE.Mesh(previewGeo, previewMat);
 previewMarker.visible = false;
 scene.add(previewMarker);
 
-function createCover(x, z, height = 1.3) {
+// МАССИВ ДИНАМИЧЕСКИХ МАЯКОВ ДЛЯ АНИМАЦИИ ВРАЩЕНИЯ
+const animatedBeacons = [];
+
+function createCover(x, z, height = 1.3, lightType = null) {
     const group = new THREE.Group();
     const geo = new THREE.BoxGeometry(TILE_SIZE * 0.82, height, TILE_SIZE * 0.82);
     const coverMesh = new THREE.Mesh(geo, coverMat);
@@ -486,6 +504,55 @@ function createCover(x, z, height = 1.3) {
     topCap.castShadow = true;
     group.add(topCap);
 
+    // 🚨 ИСТОЧНИКИ СВЕТА НА УКРЫТИЯХ
+    if (lightType === 'sos') {
+        const beaconGroup = new THREE.Group();
+        beaconGroup.position.set(0, height + 0.1, 0);
+
+        const baseMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.15, 0.2, 8),
+            new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 })
+        );
+        beaconGroup.add(baseMesh);
+
+        const capMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 0.22, 8),
+            new THREE.MeshBasicMaterial({ color: 0xff0033 })
+        );
+        capMesh.position.y = 0.2;
+        beaconGroup.add(capMesh);
+
+        // Вращающийся прожектор SOS
+        const redLight = new THREE.SpotLight(0xff0033, 6, 14, Math.PI / 4, 0.5, 1);
+        redLight.position.set(0, 0.25, 0);
+
+        const targetObj = new THREE.Object3D();
+        targetObj.position.set(3, 0.25, 0);
+        beaconGroup.add(targetObj);
+        redLight.target = targetObj;
+
+        beaconGroup.add(redLight);
+        group.add(beaconGroup);
+
+        animatedBeacons.push({ group: beaconGroup, target: targetObj, angle: Math.random() * Math.PI * 2 });
+    } 
+    else if (lightType === 'lantern') {
+        const lanternGroup = new THREE.Group();
+        lanternGroup.position.set(0, height + 0.1, 0);
+
+        const bulbMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0xffaa22 })
+        );
+        lanternGroup.add(bulbMesh);
+
+        const pLight = new THREE.PointLight(0xffaa22, 3, 6);
+        pLight.position.set(0, 0.1, 0);
+        lanternGroup.add(pLight);
+
+        group.add(lanternGroup);
+    }
+
     group.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
     scene.add(group);
 
@@ -493,16 +560,16 @@ function createCover(x, z, height = 1.3) {
     gridTiles[x][z].userData.isCover = true;
 }
 
-// 🧱 РАСШИРЕННАЯ СЕТКА УКРЫТИЙ НА КАРТЕ
-createCover(3, 2, 1.3);
+// 🧱 СЕТКА УКРЫТИЙ С ФОНАРЯМИ И СИГНАЛАМИ SOS
+createCover(3, 2, 1.3, 'lantern');
 createCover(3, 3, 1.3);
-createCover(3, 4, 1.3);
-createCover(6, 5, 1.8);
+createCover(3, 4, 1.3, 'lantern');
+createCover(6, 5, 1.8, 'sos');     // Сигнал SOS #1
 createCover(6, 6, 1.8);
-createCover(2, 7, 1.4);
+createCover(2, 7, 1.4, 'lantern');
 createCover(5, 2, 1.2);
-createCover(7, 3, 1.5);
-createCover(4, 7, 1.3);
+createCover(7, 3, 1.5, 'lantern');
+createCover(4, 7, 1.3, 'sos');     // Сигнал SOS #2
 createCover(2, 5, 1.2);
 
 function spawnTracer(startPos, endPos, isHit) {
@@ -602,7 +669,6 @@ let isGameOver = false;
 let isAnimating = false;
 let pendingMoveTile = null;
 
-// 🧭 ВОЛНОВОЙ ПОИСК ПУТИ (BFS) С УЧЕТОМ УКРЫТИЙ И ВРАГОВ
 function findPath(startX, startZ, targetX, targetZ, movingUnit) {
     if (startX === targetX && startZ === targetZ) return [];
     if (gridTiles[targetX][targetZ].userData.blocked) return null;
@@ -645,7 +711,6 @@ function findPath(startX, startZ, targetX, targetZ, movingUnit) {
     return null;
 }
 
-// 🔫 ТРАССИРОВКА ЛИНИИ ОГНЯ (ПРОВЕРКА НА БЛОКИРОВКУ УКРЫТИЕМ)
 function isLineBlockedByCover(x1, z1, x2, z2) {
     const steps = Math.max(Math.abs(x2 - x1), Math.abs(z2 - z1)) * 15;
     if (steps === 0) return false;
@@ -1433,8 +1498,17 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// 🔄 АНИМАЦИОННЫЙ ЦИКЛ РЕНДЕРИНГА И ВРАЩЕНИЯ МАЯКОВ
 function animate() {
     requestAnimationFrame(animate);
+
+    // Вращение прожекторов SOS
+    animatedBeacons.forEach(b => {
+        b.angle += 0.04;
+        b.target.position.x = Math.cos(b.angle) * 3;
+        b.target.position.z = Math.sin(b.angle) * 3;
+    });
+
     controls.update();
     renderer.render(scene, camera);
 }
