@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Desert Tactics 3D</title>
+    <title>HYNMOTA: Tactical HUD</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -19,64 +19,103 @@
             padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
         }
 
+        /* МОДАЛЬНОЕ ОКНО */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
-            background: rgba(8, 5, 3, 0.92); display: none; justify-content: center; align-items: center;
+            background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
             text-align: center;
         }
         .modal-box {
-            background: rgba(20, 14, 9, 0.96); border: 3px solid #8b6d43; border-radius: 10px;
-            padding: 30px 40px; box-shadow: 0 0 35px rgba(255, 157, 0, 0.3); max-width: 90vw; width: 380px;
+            background: rgba(20, 14, 9, 0.96); border: 2px solid #ff9d00; border-radius: 8px;
+            padding: 30px 40px; box-shadow: 0 0 35px rgba(255, 157, 0, 0.25); max-width: 90vw; width: 380px;
         }
         .modal-box h1 { margin: 0 0 10px 0; font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
-        .modal-box p { font-size: 14px; color: #d4a359; margin-bottom: 24px; line-height: 1.4; }
+        .modal-box p { font-size: 13px; color: #d4a359; margin-bottom: 24px; line-height: 1.4; }
         .btn-restart {
-            background: #8b6d43; border: 2px solid #ffd89b; color: #120e0a; font-size: 15px;
-            width: 100%; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 6px;
-            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            background: linear-gradient(180deg, #d4a359 0%, #8b6d43 100%); border: 1px solid #ffd89b; color: #120e0a; font-size: 14px;
+            width: 100%; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 4px;
+            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.8); letter-spacing: 1px;
         }
-        .btn-restart:active { transform: translateY(2px); background: #a68453; }
+        .btn-restart:active { transform: translateY(2px); }
 
-        #hud {
-            position: absolute; top: 12px; left: 12px; right: 12px; z-index: 10;
+        /* ВЕРХНИЙ HUD */
+        #hud-top {
+            position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
             pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
         }
-        .panel {
-            background: rgba(15, 11, 8, 0.94); border: 2px solid #8b6d43; border-radius: 6px;
-            padding: 12px 16px; box-shadow: 0 0 20px rgba(0,0,0,0.95); pointer-events: auto; min-width: 200px;
+        .hud-panel {
+            background: rgba(12, 9, 6, 0.88); backdrop-filter: blur(6px); border: 1px solid #554228;
+            border-top: 3px solid #ff9d00; border-radius: 6px; padding: 12px 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8); pointer-events: auto; min-width: 230px;
         }
-        .panel h2 { margin: 0 0 6px 0; font-size: 15px; color: #ff9d00; text-transform: uppercase; border-bottom: 1px solid #554228; padding-bottom: 4px; }
-        .stat-row { font-size: 13px; margin: 6px 0; display: flex; justify-content: space-between; }
-        .ap-badge { background: #2b7a3e; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
-        
-        #target-panel {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
-            display: none; background: rgba(25, 10, 10, 0.95); border: 2px solid #ff3333;
-            border-radius: 6px; padding: 12px 20px; text-align: center; pointer-events: auto;
-        }
-        #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 14px; }
-        .hit-rate { font-size: 16px; font-weight: bold; color: #00ff66; margin: 6px 0; }
-        
-        #controls-panel {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;
-            display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; justify-content: center;
-        }
-        .btn {
-            background: #3a2a18; border: 2px solid #d4a359; color: #ffd89b; padding: 12px 18px;
-            font-family: inherit; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase;
-        }
-        .btn-shoot { background: #611818; border-color: #ff3333; color: #ffcccc; }
-        .btn-melee { background: #4a1f1a; border-color: #ff6633; color: #ffddcc; }
-        .btn-ability { background: #12354a; border-color: #00ccff; color: #ccf5ff; }
-        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .btn:active:not(:disabled) { transform: translateY(2px); }
+        .unit-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .unit-name { font-size: 16px; font-weight: bold; color: #ff9d00; text-transform: uppercase; letter-spacing: 1px; }
+        .unit-class { font-size: 11px; color: #8b6d43; text-transform: uppercase; }
 
-        #log-box {
-            position: absolute; bottom: 85px; left: 12px; z-index: 10; width: 330px; max-height: 135px;
-            overflow-y: auto; background: rgba(10, 8, 6, 0.92); border: 1px solid #554228;
-            color: #a89474; font-size: 11px; padding: 8px; border-radius: 4px; pointer-events: none;
+        /* ШКАЛА ЗДОРОВЬЯ */
+        .hp-container { margin: 6px 0; }
+        .hp-label { font-size: 11px; color: #aaa; margin-bottom: 3px; display: flex; justify-content: space-between; }
+        .hp-bar-outer { width: 100%; height: 10px; background: rgba(20, 10, 10, 0.8); border: 1px solid #4a2a1f; border-radius: 3px; overflow: hidden; }
+        .hp-bar-inner { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3333 0%, #00ff66 100%); transition: width 0.4s ease; }
+        
+        .ap-container { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; }
+        .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
+        .ap-dot.empty { background: #1a221b; border-color: #334435; box-shadow: none; }
+
+        /* ОКНО АТАКИ */
+        #target-panel {
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+            display: none; background: rgba(20, 8, 8, 0.92); backdrop-filter: blur(6px); border: 1px solid #ff3333;
+            border-top: 3px solid #ff5964; border-radius: 6px; padding: 12px 24px; text-align: center; pointer-events: auto;
+            box-shadow: 0 8px 30px rgba(255,0,0,0.25); min-width: 260px;
         }
-        .log-entry { margin-bottom: 4px; }
+        #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .hit-rate { font-size: 16px; font-weight: bold; color: #00ff66; margin: 6px 0; }
+
+        /* НИЖНИЙ КОМАНДНЫЙ ФРЕЙМ (ACTION DECK) */
+        #action-deck {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+            pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .deck-frame {
+            background: rgba(12, 9, 6, 0.92); backdrop-filter: blur(8px);
+            border: 1px solid #8b6d43; border-top: 2px solid #ff9d00; border-radius: 8px;
+            padding: 10px 16px; display: flex; gap: 10px; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .btn-slot {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .key-hint { font-size: 9px; color: #8b6d43; text-transform: uppercase; font-weight: bold; }
+        
+        .btn-act {
+            background: linear-gradient(180deg, #2b2015 0%, #17110b 100%);
+            border: 1px solid #8b6d43; color: #ffd89b; padding: 12px 16px;
+            font-family: inherit; font-size: 12px; font-weight: bold; border-radius: 5px;
+            cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+            transition: all 0.15s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .btn-act:hover:not(:disabled) { border-color: #ff9d00; color: #fff; box-shadow: 0 0 12px rgba(255,157,0,0.4); transform: translateY(-1px); }
+        .btn-act:active:not(:disabled) { transform: translateY(1px); }
+        .btn-act:disabled { opacity: 0.35; cursor: not-allowed; border-color: #443523; }
+
+        .btn-shoot-theme { border-color: #ff3333; color: #ffcccc; background: linear-gradient(180deg, #421212 0%, #200808 100%); }
+        .btn-shoot-theme:hover:not(:disabled) { border-color: #ff6666; box-shadow: 0 0 12px rgba(255,51,51,0.5); }
+        
+        .btn-melee-theme { border-color: #ff6633; color: #ffddcc; background: linear-gradient(180deg, #3d1a10 0%, #1a0a05 100%); }
+        .btn-ability-theme { border-color: #00ccff; color: #ccf5ff; background: linear-gradient(180deg, #0e2a3b 0%, #06131c 100%); }
+        .btn-end-theme { border-color: #8b6d43; background: linear-gradient(180deg, #3a2e1e 0%, #1c160e 100%); }
+
+        .cost-badge { font-size: 10px; opacity: 0.8; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; }
+
+        /* ЛОГ БОЯ */
+        #log-box {
+            position: absolute; bottom: 16px; left: 16px; z-index: 10; width: 300px; max-height: 120px;
+            overflow-y: auto; background: rgba(10, 8, 6, 0.88); backdrop-filter: blur(4px); border: 1px solid #443523;
+            color: #a89474; font-size: 11px; padding: 8px 10px; border-radius: 6px; pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .log-entry { margin-bottom: 4px; line-height: 1.3; }
         .log-entry.player { color: #5bc0be; }
         .log-entry.enemy { color: #ff5964; font-weight: bold; }
         .log-entry.hit { color: #00ff66; font-weight: bold; }
@@ -123,38 +162,244 @@
         </div>
     </div>
 
-    <div id="hud">
-        <div class="panel">
-            <h2 id="unit-name">Якуб</h2>
-            <div class="stat-row">Класс: <span id="unit-class">Штурмовик</span></div>
-            <div class="stat-row">HP: <span id="unit-hp">12 / 12</span></div>
-            <div class="stat-row">AP: <span id="unit-ap" class="ap-badge">4</span></div>
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ СТАТУСА -->
+    <div id="hud-top">
+        <div class="hud-panel">
+            <div class="unit-title">
+                <span class="unit-name" id="unit-name">Якуб</span>
+                <span class="unit-class" id="unit-class">Штурмовик</span>
+            </div>
+            <div class="hp-container">
+                <div class="hp-label"><span>ЗДОРОВЬЕ</span><span id="unit-hp-text">12/12</span></div>
+                <div class="hp-bar-outer"><div id="unit-hp-bar" class="hp-bar-inner"></div></div>
+            </div>
+            <div class="ap-container">
+                <span style="color: #8b6d43; font-weight: bold; margin-right: 4px;">AP:</span>
+                <div id="ap-dots-container" style="display: flex; gap: 4px;"></div>
+            </div>
         </div>
-        <div class="panel" style="text-align: right;">
-            <h2 style="color: #d4a359;">HYNMOTA 3D</h2>
-            <div style="font-size: 12px; color: #ff9d00;" id="turn-display">ХОД ИГРОКА</div>
+
+        <div class="hud-panel" style="text-align: right; min-width: 180px;">
+            <div style="font-size: 11px; color: #8b6d43; font-weight: bold; letter-spacing: 1px;">HYNMOTA TACTICS</div>
+            <div style="font-size: 15px; color: #ff9d00; font-weight: bold; margin-top: 4px;" id="turn-display">ХОД ИГРОКА</div>
         </div>
     </div>
 
+    <!-- ЦЕЛЬ -->
     <div id="target-panel">
         <h3 id="target-name">Цель: Рева</h3>
+        <div class="hp-container" style="margin: 8px 0;">
+            <div class="hp-label"><span id="target-hp-text">16/16 HP</span></div>
+            <div class="hp-bar-outer"><div id="target-hp-bar" class="hp-bar-inner" style="background: #ff3333;"></div></div>
+        </div>
         <div style="font-size: 11px; color: #aaa;" id="target-cover">Защита: Нет</div>
         <div class="hit-rate" id="hit-chance">Шанс: 85%</div>
-        <button class="btn btn-shoot" id="shoot-btn">ОГОНЬ (-2 AP)</button>
+        <button class="btn-act btn-shoot-theme" id="shoot-btn" style="width: 100%; justify-content: center; margin-top: 8px;">
+            ОГОНЬ <span class="cost-badge">-2 AP</span>
+        </button>
     </div>
 
+    <!-- ЛОГ БОЯ -->
     <div id="log-box">
-        <div class="log-entry">Тактическая система обновлена.</div>
-        <div class="log-entry">Высота персонажей отъюстирована под уровень пола.</div>
+        <div class="log-entry">Тактический интерфейс запущен.</div>
+        <div class="log-entry">Клики по UI изолированы от карты.</div>
     </div>
 
-    <div id="controls-panel">
-        <button class="btn btn-melee" id="melee-btn">Ближний бой (-2 AP)</button>
-        <button class="btn btn-ability" id="cyber-pulse-btn">Кибер-Импульс (-2 AP)</button>
-        <button class="btn" id="end-turn-btn">Завершить ход</button>
+    <!-- НИЖНЯЯ КОМАНДНАЯ ПАНЕЛЬ -->
+    <div id="action-deck">
+        <div class="deck-frame">
+            <div class="btn-slot">
+                <span class="key-hint">[1]</span>
+                <button class="btn-act btn-melee-theme" id="melee-btn">
+                    ⚔️ Ближний бой <span class="cost-badge">-2 AP</span>
+                </button>
+            </div>
+
+            <div class="btn-slot">
+                <span class="key-hint">[2]</span>
+                <button class="btn-act btn-ability-theme" id="cyber-pulse-btn">
+                    ⚡ Кибер-Импульс <span class="cost-badge">-2 AP</span>
+                </button>
+            </div>
+
+            <div style="width: 1px; height: 32px; background: #554228; margin: 0 4px;"></div>
+
+            <div class="btn-slot">
+                <span class="key-hint">[Space]</span>
+                <button class="btn-act btn-end-theme" id="end-turn-btn">
+                    Завершить ход ➔
+                </button>
+            </div>
+        </div>
     </div>
 
 <script>
+// --- СИНТЕЗАТОР ЗВУКОВЫХ ЭФФЕКТОВ ---
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.unlocked = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+        if (this.ctx && this.ctx.state === 'running') {
+            this.unlocked = true;
+        }
+    }
+
+    playClick() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+    }
+
+    playStep() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+    }
+
+    playShoot() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(700, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+    }
+
+    playHit() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+    }
+
+    playMelee() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(900, this.ctx.currentTime + 0.08);
+        osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.18);
+    }
+
+    playPulse() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.35);
+    }
+
+    playVictory() {
+        this.init();
+        if (!this.ctx) return;
+        const notes = [261.63, 329.63, 392.00, 523.25];
+        notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.12);
+            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.12);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.12 + 0.35);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + i * 0.12);
+            osc.stop(this.ctx.currentTime + i * 0.12 + 0.35);
+        });
+    }
+
+    playDefeat() {
+        this.init();
+        if (!this.ctx) return;
+        const notes = [300, 250, 200, 140];
+        notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.18);
+            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.18);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.18 + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + i * 0.18);
+            osc.stop(this.ctx.currentTime + i * 0.18 + 0.4);
+        });
+    }
+}
+const sounds = new SoundEngine();
+
+function unlockAudioSystem() {
+    sounds.init();
+    if (sounds.unlocked) {
+        window.removeEventListener('pointerdown', unlockAudioSystem);
+        window.removeEventListener('click', unlockAudioSystem);
+    }
+}
+window.addEventListener('pointerdown', unlockAudioSystem);
+window.addEventListener('click', unlockAudioSystem);
+
+// --- СЦЕНА THREE.JS ---
 const GRID_SIZE = 10;
 const TILE_SIZE = 2;
 const MAX_SHOOT_RANGE = 4;
@@ -246,6 +491,7 @@ createCover(6, 6, 1.8);
 createCover(2, 7, 1.4);
 
 function spawnTracer(startPos, endPos, isHit) {
+    sounds.playShoot();
     const points = [startPos.clone().add(new THREE.Vector3(0, 1.2, 0)), endPos.clone().add(new THREE.Vector3(0, 1.0, 0))];
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const material = new THREE.LineBasicMaterial({ color: isHit ? 0xffaa00 : 0xff3300, linewidth: 3 });
@@ -260,6 +506,7 @@ function spawnTracer(startPos, endPos, isHit) {
 }
 
 function spawnMeleeVFX(startPos, targetPos) {
+    sounds.playMelee();
     const midPos = new THREE.Vector3().addVectors(startPos, targetPos).multiplyScalar(0.5);
     midPos.y += 1.0;
 
@@ -285,6 +532,7 @@ function spawnMeleeVFX(startPos, targetPos) {
 }
 
 function spawnCyberPulseVFX(pos) {
+    sounds.playPulse();
     const ringGeo = new THREE.RingGeometry(0.2, 1.8, 32);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, side: THREE.DoubleSide, transparent: true, opacity: 1 });
     const ring = new THREE.Mesh(ringGeo, ringMat);
@@ -383,17 +631,19 @@ class Unit {
             this.gridZ = z;
             this.ap -= distance;
             
+            sounds.playStep();
             this.mesh.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
             closeTargetPanel();
             updateUI();
             highlightMoveRange();
-            addLog(`${this.name} переместился на [${x}, ${z}] (-${distance} AP)`, this.isEnemy ? 'enemy' : 'player');
+            addLog(`${this.name} шагнул на [${x}, ${z}] (-${distance} AP)`, this.isEnemy ? 'enemy' : 'player');
             return true;
         }
         return false;
     }
 
     takeDamage(amount) {
+        sounds.playHit();
         this.hp -= amount;
         if (this.hp <= 0) {
             this.hp = 0;
@@ -428,7 +678,6 @@ const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4
 units.push(yakub, reva);
 selectedUnit = yakub;
 
-// ЗАГРУЗКА И ВЫРАВНИВАНИЕ ВЫСОТЫ 3D-МОДЕЛЕЙ (BOX3 ALIGNMENT)
 function loadModelSafely(unitObj, modelPath, visorColor) {
     if (typeof THREE.GLTFLoader === 'undefined') return;
 
@@ -448,13 +697,11 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                     }
                 });
 
-                // Вычисление габаритов и подъем модели, чтобы подошвы стояли на y = 0
                 const box = new THREE.Box3().setFromObject(model);
                 model.position.y = -box.min.y;
 
                 unitObj.mesh.add(model);
 
-                // Определение верхней точки головы для размещения свечения
                 const updatedBox = new THREE.Box3().setFromObject(model);
                 const headY = updatedBox.max.y * 0.85;
 
@@ -462,7 +709,7 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                 vLight.position.set(0, headY, 0.3);
                 unitObj.mesh.add(vLight);
 
-                addLog(`Файл ${modelPath} применен и выравнен по полу!`, 'player');
+                addLog(`Файл ${modelPath} подключен!`, 'player');
             } catch (err) { console.error(err); }
         },
         null,
@@ -500,15 +747,18 @@ function calculateHitChance(attacker, target) {
     return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist };
 }
 
+// 🎯 ИЗОЛЯЦИЯ КЛИКОВ ПО 3D-КАРТЕ (Слушаем строго Canvas)
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 function onPointerDown(event) {
     if (isEnemyTurn || isGameOver) return;
 
-    const x = event.clientX || (event.touches && event.touches[0].clientX);
-    const y = event.clientY || (event.touches && event.touches[0].clientY);
-    if (!x || !y) return;
+    // Проверка: кликнули ли именно в холст Canvas
+    if (event.target !== renderer.domElement) return;
+
+    const x = event.clientX;
+    const y = event.clientY;
 
     mouse.x = (x / window.innerWidth) * 2 - 1;
     mouse.y = -(y / window.innerHeight) * 2 + 1;
@@ -523,6 +773,7 @@ function onPointerDown(event) {
         if (parentGroup && parentGroup.userData.unit) {
             const unit = parentGroup.userData.unit;
             if (unit.isEnemy) {
+                sounds.playClick();
                 currentTarget = unit;
                 openTargetPanel(unit);
                 return;
@@ -536,14 +787,17 @@ function onPointerDown(event) {
     }
 }
 
-window.addEventListener('pointerdown', onPointerDown);
+// Привязка кликов 3D строго к холсту!
+renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
 function openTargetPanel(target) {
     const calc = calculateHitChance(selectedUnit, target);
     const shootBtn = document.getElementById('shoot-btn');
     
     document.getElementById('target-panel').style.display = 'block';
-    document.getElementById('target-name').innerText = `Цель: ${target.name} [HP: ${target.hp}/${target.maxHp}]`;
+    document.getElementById('target-name').innerText = `Цель: ${target.name}`;
+    document.getElementById('target-hp-text').innerText = `${target.hp}/${target.maxHp} HP`;
+    document.getElementById('target-hp-bar').style.width = `${(target.hp / target.maxHp) * 100}%`;
     document.getElementById('target-cover').innerText = `Защита: ${calc.cover}`;
 
     if (calc.outOfRange) {
@@ -563,10 +817,11 @@ function closeTargetPanel() {
 }
 
 document.getElementById('shoot-btn').addEventListener('click', () => {
+    sounds.playClick();
     if (!selectedUnit || !currentTarget || isEnemyTurn || isGameOver) return;
 
     if (selectedUnit.ap < 2) {
-        addLog('Недостаточно AP для выстрела! (Нужно 2 AP)', 'enemy');
+        addLog('Недостаточно AP! (Нужно 2 AP)', 'enemy');
         return;
     }
 
@@ -598,6 +853,7 @@ document.getElementById('shoot-btn').addEventListener('click', () => {
 });
 
 document.getElementById('melee-btn').addEventListener('click', () => {
+    sounds.playClick();
     if (!selectedUnit || isEnemyTurn || isGameOver) return;
 
     if (selectedUnit.ap < 2) {
@@ -630,6 +886,7 @@ document.getElementById('melee-btn').addEventListener('click', () => {
 });
 
 document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
+    sounds.playClick();
     if (!selectedUnit || isEnemyTurn || isGameOver) return;
 
     if (selectedUnit.ap < 2) {
@@ -684,8 +941,35 @@ async function runEnemyAI() {
 
         enemyUnit.ap = enemyUnit.maxAp;
 
+        const stepTowardsPlayer = () => {
+            const dx = yakub.gridX - enemyUnit.gridX;
+            const dz = yakub.gridZ - enemyUnit.gridZ;
+            let targetX = enemyUnit.gridX;
+            let targetZ = enemyUnit.gridZ;
+
+            if (Math.abs(dx) >= Math.abs(dz) && dx !== 0) {
+                targetX += Math.sign(dx);
+            } else if (dz !== 0) {
+                targetZ += Math.sign(dz);
+            }
+
+            if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
+                return enemyUnit.moveTo(targetX, targetZ);
+            } else {
+                targetX = enemyUnit.gridX;
+                targetZ = enemyUnit.gridZ;
+                if (dz !== 0) targetZ += Math.sign(dz);
+                else if (dx !== 0) targetX += Math.sign(dx);
+
+                if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
+                    return enemyUnit.moveTo(targetX, targetZ);
+                }
+            }
+            return false;
+        };
+
         while (enemyUnit.ap > 0 && yakub.hp > 0 && !isGameOver) {
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 700));
 
             const distToPlayer = Math.abs(enemyUnit.gridX - yakub.gridX) + Math.abs(enemyUnit.gridZ - yakub.gridZ);
 
@@ -698,6 +982,32 @@ async function runEnemyAI() {
                 addLog(`РЕВА НАНОСИТ УДАР ВПЛОТНУЮ! Якуб получил ${damage} урона!`, 'enemy');
                 yakub.takeDamage(damage);
             }
+            else if (distToPlayer > 1 && enemyUnit.ap >= 1 && (distToPlayer > MAX_SHOOT_RANGE || enemyUnit.ap % 2 !== 0 || Math.random() > 0.4)) {
+                const moved = stepTowardsPlayer();
+                if (!moved) {
+                    if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
+                        enemyUnit.ap -= 2;
+                        const calc = calculateHitChance(enemyUnit, yakub);
+                        const roll = Math.floor(Math.random() * 100);
+                        const isHit = roll < calc.chance;
+
+                        enemyUnit.mesh.rotation.y = Math.atan2(yakub.gridX - enemyUnit.gridX, yakub.gridZ - enemyUnit.gridZ);
+                        spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
+
+                        if (isHit) {
+                            const damage = Math.floor(Math.random() * 3) + 3;
+                            showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
+                            addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
+                            yakub.takeDamage(damage);
+                        } else {
+                            showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
+                            addLog(`Рева выстрелила и промахнулась!`, 'player');
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
             else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                 enemyUnit.ap -= 2;
 
@@ -705,10 +1015,7 @@ async function runEnemyAI() {
                 const roll = Math.floor(Math.random() * 100);
                 const isHit = roll < calc.chance;
 
-                const dx = yakub.gridX - enemyUnit.gridX;
-                const dz = yakub.gridZ - enemyUnit.gridZ;
-                enemyUnit.mesh.rotation.y = Math.atan2(dx, dz);
-
+                enemyUnit.mesh.rotation.y = Math.atan2(yakub.gridX - enemyUnit.gridX, yakub.gridZ - enemyUnit.gridZ);
                 spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
 
                 if (isHit) {
@@ -721,17 +1028,7 @@ async function runEnemyAI() {
                     addLog(`Рева выстрелила и промахнулась!`, 'player');
                 }
             } 
-            else if (enemyUnit.ap > 0) {
-                let stepX = enemyUnit.gridX + Math.sign(yakub.gridX - enemyUnit.gridX);
-                let stepZ = enemyUnit.gridZ + Math.sign(yakub.gridZ - enemyUnit.gridZ);
-
-                if (!gridTiles[stepX][stepZ].userData.blocked) {
-                    enemyUnit.moveTo(stepX, stepZ);
-                    addLog(`${enemyUnit.name} маневрирует ближе к Якубу.`, 'enemy');
-                } else {
-                    break;
-                }
-            } else {
+            else {
                 break;
             }
         }
@@ -751,7 +1048,16 @@ async function runEnemyAI() {
 }
 
 document.getElementById('end-turn-btn').addEventListener('click', () => {
+    sounds.playClick();
     if (!isEnemyTurn && !isGameOver) runEnemyAI();
+});
+
+// ГОРЯЧИЕ КЛАВИШИ С КЛАВИАТУРЫ
+window.addEventListener('keydown', (e) => {
+    if (isEnemyTurn || isGameOver) return;
+    if (e.key === '1') document.getElementById('melee-btn').click();
+    if (e.key === '2') document.getElementById('cyber-pulse-btn').click();
+    if (e.code === 'Space') document.getElementById('end-turn-btn').click();
 });
 
 function triggerGameOver(isVictory) {
@@ -763,10 +1069,12 @@ function triggerGameOver(isVictory) {
     const msg = document.getElementById('modal-msg');
 
     if (isVictory) {
+        sounds.playVictory();
         title.innerText = 'ПОБЕДА!';
         title.style.color = '#00ff66';
         msg.innerText = 'Рева повержена! Пустошь под вашим контролем.';
     } else {
+        sounds.playDefeat();
         title.innerText = 'ПОРАЖЕНИЕ';
         title.style.color = '#ff3333';
         msg.innerText = 'Якуб пал в бою... Ваша миссия провалена.';
@@ -776,6 +1084,7 @@ function triggerGameOver(isVictory) {
 }
 
 document.getElementById('restart-btn').addEventListener('click', () => {
+    sounds.playClick();
     document.getElementById('game-over-modal').style.display = 'none';
     isGameOver = false;
     isEnemyTurn = false;
@@ -819,10 +1128,27 @@ highlightMoveRange();
 function updateUI() {
     if (selectedUnit) {
         document.getElementById('unit-name').innerText = selectedUnit.name;
-        document.getElementById('unit-hp').innerText = `${selectedUnit.hp} / ${selectedUnit.maxHp}`;
-        document.getElementById('unit-ap').innerText = selectedUnit.ap;
+        document.getElementById('unit-class').innerText = selectedUnit.className;
+        document.getElementById('unit-hp-text').innerText = `${selectedUnit.hp}/${selectedUnit.maxHp}`;
+        
+        const hpPercent = Math.max(0, (selectedUnit.hp / selectedUnit.maxHp) * 100);
+        document.getElementById('unit-hp-bar').style.width = `${hpPercent}%`;
+
+        // Отрисовка AP-точек
+        const apContainer = document.getElementById('ap-dots-container');
+        apContainer.innerHTML = '';
+        for (let i = 0; i < selectedUnit.maxAp; i++) {
+            const dot = document.createElement('div');
+            dot.className = `ap-dot ${i < selectedUnit.ap ? '' : 'empty'}`;
+            apContainer.appendChild(dot);
+        }
+
+        // Блокировка кнопок действий при нехватке AP
+        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2;
+        document.getElementById('cyber-pulse-btn').disabled = selectedUnit.ap < 2;
     }
 }
+updateUI();
 
 function addLog(text, type = '') {
     const logBox = document.getElementById('log-box');
