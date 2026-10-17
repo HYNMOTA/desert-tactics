@@ -100,8 +100,9 @@
 
         .hp-container { margin: 6px 0; }
         .hp-label { font-size: 11px; color: #aaa; margin-bottom: 3px; display: flex; justify-content: space-between; }
-        .hp-bar-outer { width: 100%; height: 10px; background: rgba(20, 10, 10, 0.8); border: 1px solid #4a2a1f; border-radius: 3px; overflow: hidden; }
+        .hp-bar-outer { width: 100%; height: 10px; background: rgba(20, 10, 10, 0.8); border: 1px solid #4a2a1f; border-radius: 3px; overflow: hidden; position: relative; }
         .hp-bar-inner { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3333 0%, #00ff66 100%); transition: width 0.4s ease; }
+        .shield-bar-inner { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #00ffcc; opacity: 0.85; transition: width 0.4s ease; }
         
         .ap-container { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; }
         .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
@@ -155,6 +156,7 @@
         .btn-shoot-theme { border-color: #ff3333; color: #ffcccc; background: linear-gradient(180deg, #421212 0%, #200808 100%); }
         .btn-melee-theme { border-color: #ff6633; color: #ffddcc; background: linear-gradient(180deg, #3d1a10 0%, #1a0a05 100%); }
         .btn-ability-theme { border-color: #00ccff; color: #ccf5ff; background: linear-gradient(180deg, #0e2a3b 0%, #06131c 100%); }
+        .btn-shield-theme { border-color: #00ffcc; color: #ccffff; background: linear-gradient(180deg, #0e3b33 0%, #061c18 100%); }
         .btn-end-theme { border-color: #8b6d43; background: linear-gradient(180deg, #3a2e1e 0%, #1c160e 100%); }
 
         .cost-badge { font-size: 10px; opacity: 0.8; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; }
@@ -170,6 +172,7 @@
         .log-entry.enemy { color: #ff5964; font-weight: bold; }
         .log-entry.hit { color: #00ff66; font-weight: bold; }
         .log-entry.ability { color: #00ccff; font-weight: bold; }
+        .log-entry.shield { color: #00ffcc; font-weight: bold; }
         .log-entry.melee { color: #ff6633; font-weight: bold; }
 
         #floating-text-container {
@@ -220,7 +223,8 @@
                         <div class="char-card-stats">
                             <div><span>Здоровье:</span> <b>12 HP</b></div>
                             <div><span>Очки действий:</span> <b>4 AP</b></div>
-                            <div><span>Специфика:</span> Ближний бой и штурм</div>
+                            <div><span>Способность:</span> <b>Кибер-Импульс</b></div>
+                            <div><span>Специфика:</span> Ближний бой и оглушение</div>
                         </div>
                     </div>
                     <button class="btn-act btn-confirm-theme btn-select-char" data-char="yakub">ВЫБРАТЬ</button>
@@ -234,7 +238,8 @@
                         <div class="char-card-stats">
                             <div><span>Здоровье:</span> <b>16 HP</b></div>
                             <div><span>Очки действий:</span> <b>4 AP</b></div>
-                            <div><span>Специфика:</span> Защита и выживаемость</div>
+                            <div><span>Способность:</span> <b>Щит-Протокол</b></div>
+                            <div><span>Специфика:</span> Защитный купол (+6 Щит)</div>
                         </div>
                     </div>
                     <button class="btn-act btn-confirm-theme btn-select-char" data-char="reva">ВЫБРАТЬ</button>
@@ -261,8 +266,11 @@
                 <span class="unit-class" id="unit-class">Штурмовик</span>
             </div>
             <div class="hp-container">
-                <div class="hp-label"><span>ЗДОРОВЬЕ</span><span id="unit-hp-text">12/12</span></div>
-                <div class="hp-bar-outer"><div id="unit-hp-bar" class="hp-bar-inner"></div></div>
+                <div class="hp-label"><span>ЗДОРОВЬЕ / ЩИТ</span><span id="unit-hp-text">12/12</span></div>
+                <div class="hp-bar-outer">
+                    <div id="unit-hp-bar" class="hp-bar-inner"></div>
+                    <div id="unit-shield-bar" class="shield-bar-inner"></div>
+                </div>
             </div>
             <div class="ap-container">
                 <span style="color: #8b6d43; font-weight: bold; margin-right: 4px;">AP:</span>
@@ -314,11 +322,12 @@
                 </button>
             </div>
 
+            <!-- ДИНАМИЧЕСКАЯ СПЕЦСПОСОБНОСТЬ -->
             <div class="btn-slot">
                 <span class="key-hint">[2]</span>
-                <button class="btn-act btn-ability-theme" id="cyber-pulse-btn">
-                    <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    Кибер-Импульс <span class="cost-badge">-2 AP</span>
+                <button class="btn-act btn-ability-theme" id="ability-btn">
+                    <svg class="icon-svg" id="ability-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    <span id="ability-title">Кибер-Импульс</span> <span class="cost-badge">-2 AP</span>
                 </button>
             </div>
 
@@ -370,12 +379,11 @@ class SoundEngine {
         }
     }
 
-    // 🎸 ТЕМА ГЛАВНОГО МЕНЮ (132 BPM MAIN MENU OST)
     startMenuMusic() {
         this.init();
         if (!this.ctx || this.isMusicPlaying || !this.musicEnabled) return;
 
-        this.stopBattleMusic(); // Гарантируем остановку боевой музыки
+        this.stopBattleMusic();
         this.isMusicPlaying = true;
         this.stepIndex = 0;
 
@@ -469,27 +477,25 @@ class SoundEngine {
         this.isMusicPlaying = false;
     }
 
-    // ⚔️ БОЕВАЯ МУЗЫКА (140 BPM COMBAT TRACK)
     startBattleMusic() {
         this.init();
         if (!this.ctx || this.isBattleMusicPlaying || !this.musicEnabled) return;
 
-        this.stopMenuMusic(); // Гарантируем остановку музыки меню
+        this.stopMenuMusic();
         this.isBattleMusicPlaying = true;
         this.battleStepIndex = 0;
 
         const bpm = 140;
         const stepTime = (60 / bpm) / 4;
 
-        const bassNotes = [73.42, 73.42, 87.31, 73.42, 98.00, 73.42, 87.31, 65.41]; // D2, F2, G2, C2
-        const arpeggio = [146.83, 174.61, 220.00, 293.66]; // D3, F3, A3, D4
+        const bassNotes = [73.42, 73.42, 87.31, 73.42, 98.00, 73.42, 87.31, 65.41];
+        const arpeggio = [146.83, 174.61, 220.00, 293.66];
 
         this.battleMusicTimer = setInterval(() => {
             if (!this.isBattleMusicPlaying || !this.ctx) return;
             const now = this.ctx.currentTime;
             const s = this.battleStepIndex % 16;
 
-            // 1. Агрессивная бочка
             if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) {
                 const kick = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -504,7 +510,6 @@ class SoundEngine {
                 kick.stop(now + 0.1);
             }
 
-            // 2. Индастриал Снейр
             if (s === 4 || s === 12) {
                 const snare = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -519,7 +524,6 @@ class SoundEngine {
                 snare.stop(now + 0.12);
             }
 
-            // 3. Быстрый Хай-хэт
             const hat = this.ctx.createOscillator();
             const hGain = this.ctx.createGain();
             hat.type = 'square';
@@ -531,7 +535,6 @@ class SoundEngine {
             hat.start(now);
             hat.stop(now + 0.03);
 
-            // 4. Тяжелый темный синт-бас
             const bFreq = bassNotes[Math.floor(s / 2) % bassNotes.length];
             const bass = this.ctx.createOscillator();
             const bGain = this.ctx.createGain();
@@ -554,7 +557,6 @@ class SoundEngine {
             bass.start(now);
             bass.stop(now + stepTime * 0.85);
 
-            // 5. Тактический арпеджиатор
             if (s % 2 === 0) {
                 const arpFreq = arpeggio[(s / 2) % arpeggio.length];
                 const arp = this.ctx.createOscillator();
@@ -679,6 +681,22 @@ class SoundEngine {
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.35);
+    }
+
+    playShield() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
     }
 
     playVictory() {
@@ -965,6 +983,28 @@ function spawnCyberPulseVFX(pos) {
     animatePulse();
 }
 
+function spawnShieldVFX(unitMesh) {
+    sounds.playShield();
+    const domeGeo = new THREE.SphereGeometry(1.2, 16, 16);
+    const domeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.8 });
+    const dome = new THREE.Mesh(domeGeo, domeMat);
+    dome.position.set(0, 0.8, 0);
+    unitMesh.add(dome);
+
+    const sLight = new THREE.PointLight(0x00ffcc, 5, 4);
+    sLight.position.set(0, 1.0, 0);
+    unitMesh.add(sLight);
+
+    let op = 0.8;
+    const animShield = () => {
+        op -= 0.03;
+        domeMat.opacity = op;
+        if (op > 0) requestAnimationFrame(animShield);
+        else { unitMesh.remove(dome); unitMesh.remove(sLight); }
+    };
+    animShield();
+}
+
 function showFloatingText(text, worldPos, color = '#ff3333') {
     const el = document.createElement('div');
     el.className = 'dmg-text';
@@ -1119,6 +1159,8 @@ class Unit {
         this.gridZ = z;
         this.hp = hp;
         this.maxHp = hp;
+        this.shield = 0;
+        this.maxShield = 6;
         this.ap = maxAp;
         this.maxAp = maxAp;
         this.isEnemy = isEnemy;
@@ -1305,8 +1347,25 @@ class Unit {
     }
 
     async takeDamage(amount) {
-        this.hp -= amount;
-        await this.animateTakeDamage();
+        let remainingDmg = amount;
+
+        // Поглощение урона щитом
+        if (this.shield > 0) {
+            if (this.shield >= remainingDmg) {
+                this.shield -= remainingDmg;
+                remainingDmg = 0;
+                showFloatingText(`ЩИТ ПОГЛОТИЛ!`, this.mesh.position, '#00ffcc');
+            } else {
+                remainingDmg -= this.shield;
+                this.shield = 0;
+                showFloatingText(`ЩИТ ПРОБИТ!`, this.mesh.position, '#00ffcc');
+            }
+        }
+
+        if (remainingDmg > 0) {
+            this.hp -= remainingDmg;
+            await this.animateTakeDamage();
+        }
 
         if (this.hp <= 0) {
             this.hp = 0;
@@ -1328,6 +1387,7 @@ class Unit {
 
     resetUnit() {
         this.hp = this.maxHp;
+        this.shield = 0;
         this.ap = this.maxAp;
         this.gridX = this.startX;
         this.gridZ = this.startZ;
@@ -1457,18 +1517,35 @@ document.querySelectorAll('.btn-select-char').forEach(btn => {
         isGameOver = false;
         isEnemyTurn = false;
 
-        // ⚔️ ЗАПУСК БОЕВОЙ МУЗЫКИ
         sounds.startBattleMusic();
 
         document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
         document.getElementById('turn-display').style.color = '#ff9d00';
         document.getElementById('end-turn-btn').disabled = false;
 
+        setupAbilityButton();
         updateUI();
         highlightMoveRange();
         addLog(`--- БОЙ НАЧАТ. ВАШ ОПЕРАТОР: ${selectedUnit.name.toUpperCase()} ---`, 'player');
     });
 });
+
+// Настройка внешнего вида спецспособности на HUD
+function setupAbilityButton() {
+    const abilityBtn = document.getElementById('ability-btn');
+    const abilityTitle = document.getElementById('ability-title');
+    const abilityIcon = document.getElementById('ability-icon');
+
+    if (selectedUnit.name === 'Рева') {
+        abilityTitle.innerText = 'Щит-Протокол';
+        abilityBtn.className = 'btn-act btn-shield-theme';
+        abilityIcon.innerHTML = `<path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z" stroke="currentColor" stroke-width="2" fill="none"/>`;
+    } else {
+        abilityTitle.innerText = 'Кибер-Импульс';
+        abilityBtn.className = 'btn-act btn-ability-theme';
+        abilityIcon.innerHTML = `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/>`;
+    }
+}
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -1667,38 +1744,55 @@ document.getElementById('melee-btn').addEventListener('click', async () => {
     isAnimating = false;
 });
 
-document.getElementById('cyber-pulse-btn').addEventListener('click', async () => {
+// КНОПКА СПЕЦИАЛЬНОЙ СПОСОБНОСТИ (ЯКУБ: Кибер-Импульс / РЕВА: Щит-Протокол)
+document.getElementById('ability-btn').addEventListener('click', async () => {
     sounds.playClick();
     if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
-        addLog('Недостаточно AP для Кибер-импульса!', 'enemy');
+        addLog('Недостаточно AP для спецспособности! (Нужно 2 AP)', 'enemy');
         return;
     }
 
-    const nearbyEnemy = units.find(u => u.isEnemy && (Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ)) <= 2);
+    if (selectedUnit.name === 'Рева') {
+        // 🛡️ СИЛОВОЙ ЩИТ РЕВЫ
+        isAnimating = true;
+        selectedUnit.ap -= 2;
+        selectedUnit.shield = selectedUnit.maxShield;
 
-    if (!nearbyEnemy) {
-        addLog('Враг слишком далеко! Подойдите ближе (радиус 2 клетки).', 'enemy');
-        return;
+        spawnShieldVFX(selectedUnit.mesh);
+        showFloatingText('+6 ЩИТ!', selectedUnit.mesh.position, '#00ffcc');
+        addLog(`ЩИТ-ПРОТОКОЛ! Рева активировала купол безопасности (+6 Щит)!`, 'shield');
+
+        updateUI();
+        highlightMoveRange();
+        isAnimating = false;
+    } else {
+        // ⚡ КИБЕР-ИМПУЛЬС ЯКУБА
+        const nearbyEnemy = units.find(u => u.isEnemy && (Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ)) <= 2);
+
+        if (!nearbyEnemy) {
+            addLog('Враг слишком далеко! Подойдите ближе (радиус 2 клетки).', 'enemy');
+            return;
+        }
+
+        isAnimating = true;
+        selectedUnit.ap -= 2;
+        const damage = Math.floor(Math.random() * 3) + 6;
+
+        await selectedUnit.animateCyberPulse();
+        spawnCyberPulseVFX(nearbyEnemy.mesh.position);
+        showFloatingText(`ОГЛУШЕНИЕ! -${damage}`, nearbyEnemy.mesh.position, '#00ccff');
+        
+        nearbyEnemy.isStunned = true;
+        nearbyEnemy.ap = 0;
+        addLog(`КИБЕР-ИМПУЛЬС! ${nearbyEnemy.name} ОГЛУШЕНА (-${damage} HP)!`, 'ability');
+        await nearbyEnemy.takeDamage(damage);
+
+        updateUI();
+        highlightMoveRange();
+        isAnimating = false;
     }
-
-    isAnimating = true;
-    selectedUnit.ap -= 2;
-    const damage = Math.floor(Math.random() * 3) + 6;
-
-    await selectedUnit.animateCyberPulse();
-    spawnCyberPulseVFX(nearbyEnemy.mesh.position);
-    showFloatingText(`ОГЛУШЕНИЕ! -${damage}`, nearbyEnemy.mesh.position, '#00ccff');
-    
-    nearbyEnemy.isStunned = true;
-    nearbyEnemy.ap = 0;
-    addLog(`КИБЕР-ИМПУЛЬС! ${nearbyEnemy.name} ОГЛУШЕНА (-${damage} HP)!`, 'ability');
-    await nearbyEnemy.takeDamage(damage);
-
-    updateUI();
-    highlightMoveRange();
-    isAnimating = false;
 });
 
 async function runEnemyAI() {
@@ -1747,6 +1841,17 @@ async function runEnemyAI() {
             }
 
             if (hasVision) {
+                // ИИ Рева тоже может включить свой щит, если её здоровье падает или она под огнем!
+                if (enemyUnit.name === 'Рева' && enemyUnit.shield === 0 && enemyUnit.hp <= 10 && enemyUnit.ap >= 2) {
+                    enemyUnit.ap -= 2;
+                    enemyUnit.shield = enemyUnit.maxShield;
+                    spawnShieldVFX(enemyUnit.mesh);
+                    showFloatingText('+6 ЩИТ!', enemyUnit.mesh.position, '#00ffcc');
+                    addLog(`${enemyUnit.name.toUpperCase()} АКТИВИРУЕТ ЩИТ-ПРОТОКОЛ!`, 'enemy');
+                    await new Promise(r => setTimeout(r, 400));
+                    continue;
+                }
+
                 if (distToPlayer === 1 && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const damage = Math.floor(Math.random() * 3) + 4;
@@ -1896,13 +2001,13 @@ window.addEventListener('keydown', (e) => {
         closeTargetPanel();
     }
     if (e.key === '1') document.getElementById('melee-btn').click();
-    if (e.key === '2') document.getElementById('cyber-pulse-btn').click();
+    if (e.key === '2') document.getElementById('ability-btn').click();
     if (e.code === 'Space') document.getElementById('end-turn-btn').click();
 });
 
 function triggerGameOver(isVictory) {
     isGameOver = true;
-    sounds.stopBattleMusic(); // Останавливаем боевую музыку
+    sounds.stopBattleMusic();
 
     closeTargetPanel();
     cancelPendingAction();
@@ -1942,7 +2047,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('menu-primary').style.display = 'block';
     document.getElementById('main-menu').style.display = 'flex';
 
-    sounds.startMenuMusic(); // Возвращаем тему меню
+    sounds.startMenuMusic();
 });
 
 function highlightMoveRange() {
@@ -1970,10 +2075,23 @@ function updateUI() {
     if (selectedUnit) {
         document.getElementById('unit-name').innerText = selectedUnit.name;
         document.getElementById('unit-class').innerText = selectedUnit.className;
-        document.getElementById('unit-hp-text').innerText = `${selectedUnit.hp}/${selectedUnit.maxHp}`;
+        
+        let hpString = `${selectedUnit.hp}/${selectedUnit.maxHp}`;
+        if (selectedUnit.shield > 0) {
+            hpString += ` (+${selectedUnit.shield} Щит)`;
+        }
+        document.getElementById('unit-hp-text').innerText = hpString;
         
         const hpPercent = Math.max(0, (selectedUnit.hp / selectedUnit.maxHp) * 100);
         document.getElementById('unit-hp-bar').style.width = `${hpPercent}%`;
+
+        const shieldBar = document.getElementById('unit-shield-bar');
+        if (selectedUnit.shield > 0) {
+            const shieldPercent = Math.min(100, (selectedUnit.shield / selectedUnit.maxShield) * 100);
+            shieldBar.style.width = `${shieldPercent}%`;
+        } else {
+            shieldBar.style.width = '0%';
+        }
 
         const apContainer = document.getElementById('ap-dots-container');
         apContainer.innerHTML = '';
@@ -1984,7 +2102,7 @@ function updateUI() {
         }
 
         document.getElementById('melee-btn').disabled = selectedUnit.ap < 2 || isAnimating;
-        document.getElementById('cyber-pulse-btn').disabled = selectedUnit.ap < 2 || isAnimating;
+        document.getElementById('ability-btn').disabled = selectedUnit.ap < 2 || isAnimating;
     }
 }
 
