@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Pan Controlled Tactics 3D</title>
+    <title>HYNMOTA: Tactical Cover & LOS Engine 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -19,7 +19,6 @@
             padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
         }
 
-        /* МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
             background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
@@ -38,7 +37,6 @@
         }
         .btn-restart:active { transform: translateY(2px); }
 
-        /* ВЕРХНИЙ HUD */
         #hud-top {
             position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
             pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
@@ -61,7 +59,6 @@
         .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
         .ap-dot.empty { background: #1a221b; border-color: #334435; box-shadow: none; }
 
-        /* КАРТОЧКА ПРОТИВНИКА */
         #target-panel {
             position: absolute; bottom: 95px; right: 20px; z-index: 10;
             display: none; background: rgba(18, 10, 8, 0.94); backdrop-filter: blur(8px); border: 1px solid #ff3333;
@@ -69,9 +66,8 @@
             box-shadow: -5px 8px 25px rgba(0,0,0,0.85); min-width: 270px;
         }
         #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .hit-rate { font-size: 15px; font-weight: bold; color: #00ff66; margin: 6px 0; }
+        .hit-rate { font-size: 14px; font-weight: bold; color: #00ff66; margin: 6px 0; }
 
-        /* ОКНО ПОДТВЕРЖДЕНИЯ ДЕЙСТВИЯ */
         #confirm-panel {
             position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%); z-index: 15;
             display: none; background: rgba(15, 12, 8, 0.95); backdrop-filter: blur(10px);
@@ -80,7 +76,6 @@
         }
         #confirm-title { font-size: 12px; font-weight: bold; color: #ffd89b; margin-bottom: 8px; text-transform: uppercase; }
 
-        /* НИЖНИЙ КОМАНДНЫЙ ФРЕЙМ */
         #action-deck {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
             pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -116,7 +111,6 @@
 
         .cost-badge { font-size: 10px; opacity: 0.8; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; }
 
-        /* ЛОГ БОЯ */
         #log-box {
             position: absolute; bottom: 16px; left: 16px; z-index: 10; width: 300px; max-height: 120px;
             overflow-y: auto; background: rgba(10, 8, 6, 0.88); backdrop-filter: blur(4px); border: 1px solid #443523;
@@ -160,7 +154,6 @@
         </div>
     </div>
 
-    <!-- ВЕРХНЯЯ ПАНЕЛЬ СТАТУСА -->
     <div id="hud-top">
         <div class="hud-panel">
             <div class="unit-title">
@@ -183,7 +176,6 @@
         </div>
     </div>
 
-    <!-- КАРТОЧКА ЦЕЛИ -->
     <div id="target-panel">
         <h3 id="target-name">Цель: Рева</h3>
         <div class="hp-container" style="margin: 8px 0;">
@@ -200,7 +192,6 @@
         </div>
     </div>
 
-    <!-- ОКНО ПОДТВЕРЖДЕНИЯ ДЕЙСТВИЯ -->
     <div id="confirm-panel">
         <div id="confirm-title">Перемещение на [0, 0] (-1 AP)</div>
         <div style="display: flex; gap: 8px;">
@@ -209,14 +200,11 @@
         </div>
     </div>
 
-    <!-- ЛОГ БОЯ -->
     <div id="log-box">
-        <div class="log-entry">Управление картой подключено:</div>
-        <div class="log-entry">• Клавиатура: Стрелки / WASD</div>
-        <div class="log-entry">• Meta Quest: Левый грибок (стик)</div>
+        <div class="log-entry">Система укрытий и физика коллизий обновлены.</div>
+        <div class="log-entry">Сквозной проход и стрельба через укрытия заблокированы.</div>
     </div>
 
-    <!-- НИЖНЯЯ КОМАНДНАЯ ПАНЕЛЬ -->
     <div id="action-deck">
         <div class="deck-frame">
             <div class="btn-slot">
@@ -247,7 +235,6 @@
     </div>
 
 <script>
-// --- СИНТЕЗАТОР ЗВУКОВЫХ ЭФФЕКТОВ ---
 class SoundEngine {
     constructor() {
         this.ctx = null;
@@ -436,7 +423,6 @@ renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.enablePan = true; // Включаем возможность панорамирования
 controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
 
 const ambientLight = new THREE.AmbientLight(0xd4a359, 0.6);
@@ -480,7 +466,6 @@ for (let x = 0; x < GRID_SIZE; x++) {
     }
 }
 
-// 📍 МАРКЕР ПРЕДПРОСМОТРА ШАГА
 const previewGeo = new THREE.BoxGeometry(TILE_SIZE * 0.88, 0.25, TILE_SIZE * 0.88);
 const previewMat = new THREE.MeshBasicMaterial({ color: 0xff9d00, transparent: true, opacity: 0.6, wireframe: true });
 const previewMarker = new THREE.Mesh(previewGeo, previewMat);
@@ -508,10 +493,17 @@ function createCover(x, z, height = 1.3) {
     gridTiles[x][z].userData.isCover = true;
 }
 
-createCover(3, 3, 1.2);
-createCover(3, 4, 1.2);
+// 🧱 РАСШИРЕННАЯ СЕТКА УКРЫТИЙ НА КАРТЕ
+createCover(3, 2, 1.3);
+createCover(3, 3, 1.3);
+createCover(3, 4, 1.3);
+createCover(6, 5, 1.8);
 createCover(6, 6, 1.8);
 createCover(2, 7, 1.4);
+createCover(5, 2, 1.2);
+createCover(7, 3, 1.5);
+createCover(4, 7, 1.3);
+createCover(2, 5, 1.2);
 
 function spawnTracer(startPos, endPos, isHit) {
     sounds.playShoot();
@@ -610,60 +602,97 @@ let isGameOver = false;
 let isAnimating = false;
 let pendingMoveTile = null;
 
-// --- 🕹️ ОБРАБОТКА ДВИЖЕНИЯ КАРТЫ (КЛАВИАТУРА И ЛЕВАЯ ГРИБКА META QUEST) ---
-const keysPressed = {};
-window.addEventListener('keydown', e => { keysPressed[e.code] = true; });
-window.addEventListener('keyup', e => { keysPressed[e.code] = false; });
+// 🧭 ВОЛНОВОЙ ПОИСК ПУТИ (BFS) С УЧЕТОМ УКРЫТИЙ И ВРАГОВ
+function findPath(startX, startZ, targetX, targetZ, movingUnit) {
+    if (startX === targetX && startZ === targetZ) return [];
+    if (gridTiles[targetX][targetZ].userData.blocked) return null;
 
-function updateCameraPan() {
-    if (isGameOver) return;
+    const targetOccupied = units.some(u => u !== movingUnit && u.hp > 0 && u.gridX === targetX && u.gridZ === targetZ);
+    if (targetOccupied) return null;
 
-    const panSpeed = 0.22;
-    let moveX = 0;
-    let moveZ = 0;
+    const queue = [[{ x: startX, z: startZ }]];
+    const visited = new Set();
+    visited.add(`${startX},${startZ}`);
 
-    // 1. Клавиатура: Стрелки + WASD
-    if (keysPressed['ArrowLeft'] || keysPressed['KeyA']) moveX -= 1;
-    if (keysPressed['ArrowRight'] || keysPressed['KeyD']) moveX += 1;
-    if (keysPressed['ArrowUp'] || keysPressed['KeyW']) moveZ -= 1;
-    if (keysPressed['ArrowDown'] || keysPressed['KeyS']) moveZ += 1;
+    const dirs = [{x: 1, z: 0}, {x: -1, z: 0}, {x: 0, z: 1}, {x: 0, z: -1}];
 
-    // 2. Геймпад / Meta Quest (Левый грибок)
-    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-    for (let i = 0; i < gamepads.length; i++) {
-        const gp = gamepads[i];
-        if (gp && gp.connected) {
-            const isLeftHand = gp.hand === 'left' || (gp.id && gp.id.toLowerCase().includes('left'));
-            if (isLeftHand || (i === 0 && gp.axes && gp.axes.length >= 2)) {
-                const axisX = gp.axes[0] || 0;
-                const axisY = gp.axes[1] || 0;
-                const deadzone = 0.18; // Мертвая зона стика
+    while (queue.length > 0) {
+        const path = queue.shift();
+        const current = path[path.length - 1];
 
-                if (Math.abs(axisX) > deadzone) moveX += axisX;
-                if (Math.abs(axisY) > deadzone) moveZ += axisY;
+        if (current.x === targetX && current.z === targetZ) {
+            return path.slice(1);
+        }
+
+        for (let d of dirs) {
+            const nx = current.x + d.x;
+            const nz = current.z + d.z;
+
+            if (nx >= 0 && nx < GRID_SIZE && nz >= 0 && nz < GRID_SIZE) {
+                const key = `${nx},${nz}`;
+                if (!visited.has(key)) {
+                    const isCover = gridTiles[nx][nz].userData.blocked;
+                    const isOccupied = units.some(u => u !== movingUnit && u.hp > 0 && u.gridX === nx && u.gridZ === nz);
+
+                    if (!isCover && !isOccupied) {
+                        visited.add(key);
+                        queue.push([...path, { x: nx, z: nz }]);
+                    }
+                }
             }
         }
     }
+    return null;
+}
 
-    if (moveX !== 0 || moveZ !== 0) {
-        // Направление взгляда камеры на плоскости XZ
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        forward.y = 0;
-        forward.normalize();
+// 🔫 ТРАССИРОВКА ЛИНИИ ОГНЯ (ПРОВЕРКА НА БЛОКИРОВКУ УКРЫТИЕМ)
+function isLineBlockedByCover(x1, z1, x2, z2) {
+    const steps = Math.max(Math.abs(x2 - x1), Math.abs(z2 - z1)) * 15;
+    if (steps === 0) return false;
 
-        // Перпендикулярный вектор направо
-        const right = new THREE.Vector3();
-        right.crossVectors(forward, camera.up).normalize();
+    for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const currX = Math.floor(x1 + 0.5 + (x2 - x1) * t);
+        const currZ = Math.floor(z1 + 0.5 + (z2 - z1) * t);
 
-        // Рассчитываем итоговый вектор смещения
-        const moveVec = new THREE.Vector3();
-        moveVec.addScaledVector(right, moveX * panSpeed);
-        moveVec.addScaledVector(forward, -moveZ * panSpeed);
+        if ((currX === x1 && currZ === z1) || (currX === x2 && currZ === z2)) continue;
 
-        controls.target.add(moveVec);
-        camera.position.add(moveVec);
+        if (currX >= 0 && currX < GRID_SIZE && currZ >= 0 && currZ < GRID_SIZE) {
+            if (gridTiles[currX][currZ].userData.isCover) {
+                return true;
+            }
+        }
     }
+    return false;
+}
+
+function calculateHitChance(attacker, target) {
+    const dist = Math.abs(attacker.gridX - target.gridX) + Math.abs(attacker.gridZ - target.gridZ);
+
+    if (dist > MAX_SHOOT_RANGE) {
+        return { chance: 0, cover: 'Дистанция > 4 кл.', outOfRange: true, distance: dist, blocked: false };
+    }
+
+    if (isLineBlockedByCover(attacker.gridX, attacker.gridZ, target.gridX, target.gridZ)) {
+        return { chance: 0, cover: 'ЗАБЛОКИРОВАНО УКРЫТИЕМ', outOfRange: false, distance: dist, blocked: true };
+    }
+
+    let baseChance = 85;
+    let coverType = 'Открытая цель (85%)';
+
+    const dirs = [{x: 1, z: 0}, {x: -1, z: 0}, {x: 0, z: 1}, {x: 0, z: -1}];
+    const nearCover = dirs.some(d => {
+        const cx = target.gridX + d.x;
+        const cz = target.gridZ + d.z;
+        return cx >= 0 && cx < GRID_SIZE && cz >= 0 && cz < GRID_SIZE && gridTiles[cx][cz].userData.isCover;
+    });
+
+    if (nearCover) {
+        baseChance = 45;
+        coverType = 'За укрытием (45%)';
+    }
+
+    return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist, blocked: false };
 }
 
 class Unit {
@@ -706,24 +735,11 @@ class Unit {
     }
 
     async animateMoveTo(targetX, targetZ) {
-        const distance = Math.abs(this.gridX - targetX) + Math.abs(this.gridZ - targetZ);
-        if (this.ap < distance || gridTiles[targetX][targetZ].userData.blocked) return false;
+        const path = findPath(this.gridX, this.gridZ, targetX, targetZ, this);
+        if (!path || path.length > this.ap) return false;
 
         isAnimating = true;
-        this.ap -= distance;
-
-        const path = [];
-        let currX = this.gridX;
-        let currZ = this.gridZ;
-
-        while (currX !== targetX) {
-            currX += Math.sign(targetX - currX);
-            path.push({ x: currX, z: currZ });
-        }
-        while (currZ !== targetZ) {
-            currZ += Math.sign(targetZ - currZ);
-            path.push({ x: currX, z: currZ });
-        }
+        this.ap -= path.length;
 
         for (let step of path) {
             const startPos = this.mesh.position.clone();
@@ -735,7 +751,7 @@ class Unit {
 
             sounds.playStep();
 
-            const duration = 220;
+            const duration = 200;
             const startTime = performance.now();
 
             await new Promise(resolve => {
@@ -764,7 +780,7 @@ class Unit {
         cancelPendingAction();
         updateUI();
         highlightMoveRange();
-        addLog(`${this.name} переместился на [${targetX}, ${targetZ}] (-${distance} AP)`, this.isEnemy ? 'enemy' : 'player');
+        addLog(`${this.name} переместился на [${targetX}, ${targetZ}] (-${path.length} AP)`, this.isEnemy ? 'enemy' : 'player');
         
         isAnimating = false;
         return true;
@@ -952,34 +968,6 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
 loadModelSafely(yakub, './models/yakub.glb', 0xff0033);
 loadModelSafely(reva, './models/reva.glb', 0x00ff66);
 
-function calculateHitChance(attacker, target) {
-    const dist = Math.abs(attacker.gridX - target.gridX) + Math.abs(attacker.gridZ - target.gridZ);
-
-    if (dist > MAX_SHOOT_RANGE) {
-        return { chance: 0, cover: 'Слишком далеко (>4 кл.)', outOfRange: true, distance: dist };
-    }
-
-    let baseChance = 85;
-    let coverType = 'Нет (85%)';
-
-    const dx = Math.sign(attacker.gridX - target.gridX);
-    const dz = Math.sign(attacker.gridZ - target.gridZ);
-
-    const checkX = target.gridX + dx;
-    const checkZ = target.gridZ + dz;
-
-    if (checkX >= 0 && checkX < GRID_SIZE && gridTiles[checkX][target.gridZ].userData.isCover) {
-        baseChance = 45;
-        coverType = 'Укрытие (45%)';
-    } else if (checkZ >= 0 && checkZ < GRID_SIZE && gridTiles[target.gridX][checkZ].userData.isCover) {
-        baseChance = 45;
-        coverType = 'Укрытие (45%)';
-    }
-
-    return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist };
-}
-
-// 🎯 ОБРАБОТЧИК КЛИКОВ И ПЛАНИРОВАНИЯ ДЕЙСТВИЙ
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -1019,12 +1007,12 @@ function onPointerDown(event) {
         if (hit.object.userData && hit.object.userData.isTile && selectedUnit) {
             const tileX = hit.object.userData.gridX;
             const tileZ = hit.object.userData.gridZ;
-            const dist = Math.abs(selectedUnit.gridX - tileX) + Math.abs(selectedUnit.gridZ - tileZ);
 
-            if (dist > 0 && dist <= selectedUnit.ap && !gridTiles[tileX][tileZ].userData.blocked) {
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, tileX, tileZ, selectedUnit);
+            if (path && path.length > 0 && path.length <= selectedUnit.ap) {
                 sounds.playClick();
                 closeTargetPanel();
-                stageMoveAction(tileX, tileZ, dist);
+                stageMoveAction(tileX, tileZ, path.length);
                 return;
             }
         }
@@ -1066,7 +1054,11 @@ function openTargetPanel(target) {
     document.getElementById('target-hp-bar').style.width = `${(target.hp / target.maxHp) * 100}%`;
     document.getElementById('target-cover').innerText = `Защита: ${calc.cover}`;
 
-    if (calc.outOfRange) {
+    if (calc.blocked) {
+        document.getElementById('hit-chance').innerText = `НЕТ ЛИНИИ ОГНЯ (Укрытие)`;
+        document.getElementById('hit-chance').style.color = '#ff5964';
+        shootBtn.disabled = true;
+    } else if (calc.outOfRange) {
         document.getElementById('hit-chance').innerText = `ВНЕ ЗОНЫ (Дист: ${calc.distance}/4)`;
         document.getElementById('hit-chance').style.color = '#ff5964';
         shootBtn.disabled = true;
@@ -1107,6 +1099,10 @@ document.getElementById('shoot-btn').addEventListener('click', async () => {
     }
 
     const calc = calculateHitChance(selectedUnit, currentTarget);
+    if (calc.blocked) {
+        addLog('Выстрел невозможно выполнить: между вами укрытие!', 'enemy');
+        return;
+    }
     if (calc.outOfRange) {
         addLog('Цель слишком далеко! Максимальная дальность стрельбы — 4 клетки.', 'enemy');
         return;
@@ -1229,28 +1225,25 @@ async function runEnemyAI() {
         enemyUnit.ap = enemyUnit.maxAp;
 
         const stepTowardsPlayer = async () => {
-            const dx = yakub.gridX - enemyUnit.gridX;
-            const dz = yakub.gridZ - enemyUnit.gridZ;
-            let targetX = enemyUnit.gridX;
-            let targetZ = enemyUnit.gridZ;
+            const dirs = [{x: 1, z: 0}, {x: -1, z: 0}, {x: 0, z: 1}, {x: 0, z: -1}];
+            let bestTarget = null;
+            let minLen = Infinity;
 
-            if (Math.abs(dx) >= Math.abs(dz) && dx !== 0) {
-                targetX += Math.sign(dx);
-            } else if (dz !== 0) {
-                targetZ += Math.sign(dz);
+            for (let d of dirs) {
+                const tx = yakub.gridX + d.x;
+                const tz = yakub.gridZ + d.z;
+
+                if (tx >= 0 && tx < GRID_SIZE && tz >= 0 && tz < GRID_SIZE) {
+                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, tx, tz, enemyUnit);
+                    if (path && path.length < minLen) {
+                        minLen = path.length;
+                        bestTarget = { x: tx, z: tz };
+                    }
+                }
             }
 
-            if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
-                return await enemyUnit.animateMoveTo(targetX, targetZ);
-            } else {
-                targetX = enemyUnit.gridX;
-                targetZ = enemyUnit.gridZ;
-                if (dz !== 0) targetZ += Math.sign(dz);
-                else if (dx !== 0) targetX += Math.sign(dx);
-
-                if (targetX >= 0 && targetX < GRID_SIZE && targetZ >= 0 && targetZ < GRID_SIZE && !gridTiles[targetX][targetZ].userData.blocked) {
-                    return await enemyUnit.animateMoveTo(targetX, targetZ);
-                }
+            if (bestTarget) {
+                return await enemyUnit.animateMoveTo(bestTarget.x, bestTarget.z);
             }
             return false;
         };
@@ -1270,54 +1263,31 @@ async function runEnemyAI() {
                 addLog(`РЕВА НАНОСИТ УДАР ВПЛОТНУЮ! Якуб получил ${damage} урона!`, 'enemy');
                 await yakub.takeDamage(damage);
             }
-            else if (distToPlayer > 1 && enemyUnit.ap >= 1 && (distToPlayer > MAX_SHOOT_RANGE || enemyUnit.ap % 2 !== 0 || Math.random() > 0.4)) {
-                const moved = await stepTowardsPlayer();
-                if (!moved) {
-                    if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
-                        enemyUnit.ap -= 2;
-                        const calc = calculateHitChance(enemyUnit, yakub);
-                        const roll = Math.floor(Math.random() * 100);
-                        const isHit = roll < calc.chance;
-
-                        await enemyUnit.animateRecoil(yakub.mesh.position);
-                        spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
-
-                        if (isHit) {
-                            const damage = Math.floor(Math.random() * 3) + 3;
-                            showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
-                            addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
-                            await yakub.takeDamage(damage);
-                        } else {
-                            showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
-                            addLog(`Рева выстрелила и промахнулась!`, 'player');
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-            else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
-                enemyUnit.ap -= 2;
-
-                const calc = calculateHitChance(enemyUnit, yakub);
-                const roll = Math.floor(Math.random() * 100);
-                const isHit = roll < calc.chance;
-
-                await enemyUnit.animateRecoil(yakub.mesh.position);
-                spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
-
-                if (isHit) {
-                    const damage = Math.floor(Math.random() * 3) + 3;
-                    showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
-                    addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
-                    await yakub.takeDamage(damage);
-                } else {
-                    showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
-                    addLog(`Рева выстрелила и промахнулась!`, 'player');
-                }
-            } 
             else {
-                break;
+                const calc = calculateHitChance(enemyUnit, yakub);
+                if (!calc.blocked && !calc.outOfRange && enemyUnit.ap >= 2) {
+                    enemyUnit.ap -= 2;
+                    const roll = Math.floor(Math.random() * 100);
+                    const isHit = roll < calc.chance;
+
+                    await enemyUnit.animateRecoil(yakub.mesh.position);
+                    spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
+
+                    if (isHit) {
+                        const damage = Math.floor(Math.random() * 3) + 3;
+                        showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
+                        addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
+                        await yakub.takeDamage(damage);
+                    } else {
+                        showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
+                        addLog(`Рева выстрелила и промахнулась!`, 'player');
+                    }
+                } else if (enemyUnit.ap >= 1) {
+                    const moved = await stepTowardsPlayer();
+                    if (!moved) break;
+                } else {
+                    break;
+                }
             }
         }
     }
@@ -1340,7 +1310,6 @@ document.getElementById('end-turn-btn').addEventListener('click', () => {
     if (!isEnemyTurn && !isGameOver && !isAnimating) runEnemyAI();
 });
 
-// ГОРЯЧИЕ КЛАВИШИ
 window.addEventListener('keydown', (e) => {
     if (isEnemyTurn || isGameOver || isAnimating) return;
 
@@ -1415,8 +1384,10 @@ function highlightMoveRange() {
 
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
-            const dist = Math.abs(selectedUnit.gridX - x) + Math.abs(selectedUnit.gridZ - z);
-            if (dist <= selectedUnit.ap && dist > 0 && !gridTiles[x][z].userData.blocked) {
+            if (x === selectedUnit.gridX && z === selectedUnit.gridZ) continue;
+
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, x, z, selectedUnit);
+            if (path && path.length <= selectedUnit.ap) {
                 gridTiles[x][z].material.color.setHex(0x1e4a2c);
             }
         }
@@ -1464,7 +1435,6 @@ window.addEventListener('resize', () => {
 
 function animate() {
     requestAnimationFrame(animate);
-    updateCameraPan(); // Движение карты по клавиатуре / стику Meta Quest
     controls.update();
     renderer.render(scene, camera);
 }
