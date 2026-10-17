@@ -347,9 +347,12 @@ class SoundEngine {
         this.ctx = null;
         this.unlocked = false;
         this.isMusicPlaying = false;
+        this.isBattleMusicPlaying = false;
         this.musicEnabled = true;
         this.musicTimer = null;
+        this.battleMusicTimer = null;
         this.stepIndex = 0;
+        this.battleStepIndex = 0;
     }
 
     init() {
@@ -367,10 +370,12 @@ class SoundEngine {
         }
     }
 
+    // 🎸 ТЕМА ГЛАВНОГО МЕНЮ (132 BPM MAIN MENU OST)
     startMenuMusic() {
         this.init();
         if (!this.ctx || this.isMusicPlaying || !this.musicEnabled) return;
 
+        this.stopBattleMusic(); // Гарантируем остановку боевой музыки
         this.isMusicPlaying = true;
         this.stepIndex = 0;
 
@@ -462,6 +467,121 @@ class SoundEngine {
             this.musicTimer = null;
         }
         this.isMusicPlaying = false;
+    }
+
+    // ⚔️ БОЕВАЯ МУЗЫКА (140 BPM COMBAT TRACK)
+    startBattleMusic() {
+        this.init();
+        if (!this.ctx || this.isBattleMusicPlaying || !this.musicEnabled) return;
+
+        this.stopMenuMusic(); // Гарантируем остановку музыки меню
+        this.isBattleMusicPlaying = true;
+        this.battleStepIndex = 0;
+
+        const bpm = 140;
+        const stepTime = (60 / bpm) / 4;
+
+        const bassNotes = [73.42, 73.42, 87.31, 73.42, 98.00, 73.42, 87.31, 65.41]; // D2, F2, G2, C2
+        const arpeggio = [146.83, 174.61, 220.00, 293.66]; // D3, F3, A3, D4
+
+        this.battleMusicTimer = setInterval(() => {
+            if (!this.isBattleMusicPlaying || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const s = this.battleStepIndex % 16;
+
+            // 1. Агрессивная бочка
+            if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) {
+                const kick = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                kick.type = 'sine';
+                kick.frequency.setValueAtTime(160, now);
+                kick.frequency.exponentialRampToValueAtTime(28, now + 0.1);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                kick.connect(gain);
+                gain.connect(this.ctx.destination);
+                kick.start(now);
+                kick.stop(now + 0.1);
+            }
+
+            // 2. Индастриал Снейр
+            if (s === 4 || s === 12) {
+                const snare = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                snare.type = 'triangle';
+                snare.frequency.setValueAtTime(250, now);
+                snare.frequency.exponentialRampToValueAtTime(60, now + 0.12);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                snare.connect(gain);
+                gain.connect(this.ctx.destination);
+                snare.start(now);
+                snare.stop(now + 0.12);
+            }
+
+            // 3. Быстрый Хай-хэт
+            const hat = this.ctx.createOscillator();
+            const hGain = this.ctx.createGain();
+            hat.type = 'square';
+            hat.frequency.setValueAtTime(8000, now);
+            hGain.gain.setValueAtTime(s % 4 === 2 ? 0.04 : 0.02, now);
+            hGain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+            hat.connect(hGain);
+            hGain.connect(this.ctx.destination);
+            hat.start(now);
+            hat.stop(now + 0.03);
+
+            // 4. Тяжелый темный синт-бас
+            const bFreq = bassNotes[Math.floor(s / 2) % bassNotes.length];
+            const bass = this.ctx.createOscillator();
+            const bGain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+
+            bass.type = 'sawtooth';
+            bass.frequency.setValueAtTime(bFreq, now);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, now);
+            filter.frequency.exponentialRampToValueAtTime(200, now + stepTime * 0.85);
+
+            bGain.gain.setValueAtTime(0.16, now);
+            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.85);
+
+            bass.connect(filter);
+            filter.connect(bGain);
+            bGain.connect(this.ctx.destination);
+
+            bass.start(now);
+            bass.stop(now + stepTime * 0.85);
+
+            // 5. Тактический арпеджиатор
+            if (s % 2 === 0) {
+                const arpFreq = arpeggio[(s / 2) % arpeggio.length];
+                const arp = this.ctx.createOscillator();
+                const aGain = this.ctx.createGain();
+                arp.type = 'sawtooth';
+                arp.frequency.setValueAtTime(arpFreq, now);
+
+                aGain.gain.setValueAtTime(0.05, now);
+                aGain.gain.linearRampToValueAtTime(0.005, now + 0.1);
+
+                arp.connect(aGain);
+                aGain.connect(this.ctx.destination);
+
+                arp.start(now);
+                arp.stop(now + 0.1);
+            }
+
+            this.battleStepIndex++;
+        }, stepTime * 1000);
+    }
+
+    stopBattleMusic() {
+        if (this.battleMusicTimer) {
+            clearInterval(this.battleMusicTimer);
+            this.battleMusicTimer = null;
+        }
+        this.isBattleMusicPlaying = false;
     }
 
     playClick() {
@@ -601,7 +721,9 @@ const sounds = new SoundEngine();
 
 function unlockAudioSystem() {
     sounds.init();
-    sounds.startMenuMusic();
+    if (!isGameStarted) {
+        sounds.startMenuMusic();
+    }
 }
 window.addEventListener('pointerdown', unlockAudioSystem, { once: true });
 window.addEventListener('click', unlockAudioSystem, { once: true });
@@ -876,7 +998,6 @@ let isAnimating = false;
 let isGameStarted = false;
 let pendingMoveTile = null;
 
-// 🎯 ИСПРАВЛЕННЫЙ ПОИСК ПУТИ (Поддерживает движение к занятой цели)
 function findPath(startX, startZ, targetX, targetZ, movingUnit, allowTargetOccupied = false) {
     if (startX === targetX && startZ === targetZ) return [];
     if (gridTiles[targetX][targetZ].userData.blocked) return null;
@@ -1032,7 +1153,6 @@ class Unit {
     }
 
     async animateMoveTo(targetX, targetZ) {
-        // При обычном движении игрока целевая клетка не должна быть занята
         const path = findPath(this.gridX, this.gridZ, targetX, targetZ, this, false);
         if (!path || path.length > this.ap) return false;
 
@@ -1275,10 +1395,15 @@ document.getElementById('music-toggle').addEventListener('click', () => {
     const btn = document.getElementById('music-toggle');
     if (sounds.musicEnabled) {
         btn.innerText = '🔊 МУЗЫКА: ВКЛ';
-        sounds.startMenuMusic();
+        if (isGameStarted) {
+            sounds.startBattleMusic();
+        } else {
+            sounds.startMenuMusic();
+        }
     } else {
         btn.innerText = '🔇 МУЗЫКА: ВЫКЛ';
         sounds.stopMenuMusic();
+        sounds.stopBattleMusic();
     }
 });
 
@@ -1298,7 +1423,6 @@ document.getElementById('btn-back-to-primary').addEventListener('click', () => {
 document.querySelectorAll('.btn-select-char').forEach(btn => {
     btn.addEventListener('click', (e) => {
         sounds.playClick();
-        sounds.stopMenuMusic();
 
         const chosenChar = e.currentTarget.getAttribute('data-char');
 
@@ -1332,6 +1456,9 @@ document.querySelectorAll('.btn-select-char').forEach(btn => {
         isGameStarted = true;
         isGameOver = false;
         isEnemyTurn = false;
+
+        // ⚔️ ЗАПУСК БОЕВОЙ МУЗЫКИ
+        sounds.startBattleMusic();
 
         document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
         document.getElementById('turn-display').style.color = '#ff9d00';
@@ -1574,7 +1701,6 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', async () =>
     isAnimating = false;
 });
 
-// 🧠 УЛУЧШЕННЫЙ ЛОГИЧЕСКИЙ БЛОК ИИ (Сближение и Атака)
 async function runEnemyAI() {
     if (!isGameStarted || isGameOver || isAnimating) return;
 
@@ -1607,7 +1733,6 @@ async function runEnemyAI() {
             const distToPlayer = Math.abs(enemyUnit.gridX - playerUnit.gridX) + Math.abs(enemyUnit.gridZ - playerUnit.gridZ);
             const blocked = isLineBlockedByCover(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ);
             
-            // Если игрок уже обнаружен, видимость сохраняется на большее расстояние (до 12 клеток)
             const detectLimit = enemyUnit.hasSpottedPlayer ? 12 : 8;
             const hasVision = !blocked && distToPlayer <= detectLimit;
 
@@ -1622,7 +1747,6 @@ async function runEnemyAI() {
             }
 
             if (hasVision) {
-                // 1. Если вплотную (1 клетка) — бьет в ближнем бою
                 if (distToPlayer === 1 && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const damage = Math.floor(Math.random() * 3) + 4;
@@ -1633,7 +1757,6 @@ async function runEnemyAI() {
                     addLog(`${enemyUnit.name.toUpperCase()} НАНОСИТ УДАР ВПЛОТНУЮ! ${playerUnit.name} получил ${damage} урона!`, 'enemy');
                     await playerUnit.takeDamage(damage);
                 }
-                // 2. Если в зоне выстрела (<= 4 клеток) — стреляет
                 else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const calc = calculateHitChance(enemyUnit, playerUnit);
@@ -1653,11 +1776,9 @@ async function runEnemyAI() {
                         addLog(`${enemyUnit.name} выстрелила и промахнулась!`, 'player');
                     }
                 }
-                // 3. Вне дальности стрельбы (> 4 клеток) — сокращает дистанцию, двигаясь к игроку!
                 else if (enemyUnit.ap >= 1) {
                     const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ, enemyUnit, true);
                     if (path && path.length > 0) {
-                        // Делает 1 шаг ближе к игроку
                         await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
                     } else {
                         break;
@@ -1667,7 +1788,6 @@ async function runEnemyAI() {
                 }
             }
             else {
-                // Игрока не видно или перекрыто укрытием: идём к последней точечной позиции
                 if (enemyUnit.lastKnownPos) {
                     if (enemyUnit.gridX === enemyUnit.lastKnownPos.x && enemyUnit.gridZ === enemyUnit.lastKnownPos.z) {
                         addLog(`${enemyUnit.name} обыскала точку [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}] — цели нет!`, 'enemy');
@@ -1684,7 +1804,6 @@ async function runEnemyAI() {
                     }
                 }
                 else {
-                    // Патрулирование свободного сектора
                     if (!enemyUnit.patrolTarget || (enemyUnit.gridX === enemyUnit.patrolTarget.x && enemyUnit.gridZ === enemyUnit.patrolTarget.z)) {
                         enemyUnit.patrolTarget = getNewPatrolTarget(enemyUnit);
                     }
@@ -1718,7 +1837,6 @@ async function runEnemyAI() {
     }
 }
 
-// Вспомогательный метод пошагового перемещения юнитов ИИ
 Unit.prototype.animateMoveToStep = async function(stepX, stepZ) {
     isAnimating = true;
     this.ap -= 1;
@@ -1784,6 +1902,8 @@ window.addEventListener('keydown', (e) => {
 
 function triggerGameOver(isVictory) {
     isGameOver = true;
+    sounds.stopBattleMusic(); // Останавливаем боевую музыку
+
     closeTargetPanel();
     cancelPendingAction();
 
@@ -1822,7 +1942,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('menu-primary').style.display = 'block';
     document.getElementById('main-menu').style.display = 'flex';
 
-    sounds.startMenuMusic();
+    sounds.startMenuMusic(); // Возвращаем тему меню
 });
 
 function highlightMoveRange() {
