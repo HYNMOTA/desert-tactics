@@ -19,7 +19,6 @@
             padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
         }
 
-        /* ЭКРАН КОНЕЦ ИГРЫ (MODAL) */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
             background: rgba(8, 5, 3, 0.92); display: none; justify-content: center; align-items: center;
@@ -116,7 +115,6 @@
     <div id="canvas-container"></div>
     <div id="floating-text-container"></div>
 
-    <!-- МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" -->
     <div id="game-over-modal">
         <div class="modal-box">
             <h1 id="modal-title">ПОРАЖЕНИЕ</h1>
@@ -147,7 +145,7 @@
 
     <div id="log-box">
         <div class="log-entry">Тактическая система обновлена.</div>
-        <div class="log-entry">Макс. дальность стрельбы: 4 клетки. Ближний бой: 1 клетка.</div>
+        <div class="log-entry">Высота персонажей отъюстирована под уровень пола.</div>
     </div>
 
     <div id="controls-panel">
@@ -157,10 +155,9 @@
     </div>
 
 <script>
-// --- ИНИЦИАЛИЗА 3D-СЦЕНЫ ---
 const GRID_SIZE = 10;
 const TILE_SIZE = 2;
-const MAX_SHOOT_RANGE = 4; // Максимальная дальность стрельбы
+const MAX_SHOOT_RANGE = 4;
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x16100a);
@@ -181,7 +178,6 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
 
-// --- ОСВЕЩЕНИЕ ---
 const ambientLight = new THREE.AmbientLight(0xd4a359, 0.6);
 scene.add(ambientLight);
 
@@ -196,7 +192,6 @@ const rimLight = new THREE.DirectionalLight(0x3a556a, 0.7);
 rimLight.position.set(-15, 12, -10);
 scene.add(rimLight);
 
-// --- СЕТКА И УБЕДИТЕЛЬНЫЕ ТЕКСТУРЫ ---
 const tileBaseMat = new THREE.MeshLambertMaterial({ color: 0x322518 });
 const tileEdgeMat = new THREE.MeshBasicMaterial({ color: 0x5a442e, wireframe: true });
 const coverMat = new THREE.MeshStandardMaterial({ color: 0x221a12, roughness: 0.85, metalness: 0.2 });
@@ -224,7 +219,6 @@ for (let x = 0; x < GRID_SIZE; x++) {
     }
 }
 
-// УКРЫТИЯ
 function createCover(x, z, height = 1.3) {
     const group = new THREE.Group();
     const geo = new THREE.BoxGeometry(TILE_SIZE * 0.82, height, TILE_SIZE * 0.82);
@@ -251,7 +245,6 @@ createCover(3, 4, 1.2);
 createCover(6, 6, 1.8);
 createCover(2, 7, 1.4);
 
-// --- ЭФФЕКТЫ (VFX) ---
 function spawnTracer(startPos, endPos, isHit) {
     const points = [startPos.clone().add(new THREE.Vector3(0, 1.2, 0)), endPos.clone().add(new THREE.Vector3(0, 1.0, 0))];
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -266,7 +259,6 @@ function spawnTracer(startPos, endPos, isHit) {
     setTimeout(() => { scene.remove(line); scene.remove(flash); }, 140);
 }
 
-// Эффект ближнего боя (Меч/Клинок)
 function spawnMeleeVFX(startPos, targetPos) {
     const midPos = new THREE.Vector3().addVectors(startPos, targetPos).multiplyScalar(0.5);
     midPos.y += 1.0;
@@ -339,7 +331,6 @@ function showFloatingText(text, worldPos, color = '#ff3333') {
     setTimeout(() => { el.remove(); }, 800);
 }
 
-// --- ЮНИТЫ ---
 let units = [];
 let selectedUnit = null;
 let currentTarget = null;
@@ -412,11 +403,10 @@ class Unit {
             
             closeTargetPanel();
 
-            // Проверка условий КОНЕЦ ИГРЫ
             if (this.name === 'Якуб') {
-                triggerGameOver(false); // Поражение
+                triggerGameOver(false);
             } else if (this.name === 'Рева') {
-                triggerGameOver(true); // Победа
+                triggerGameOver(true);
             }
         }
     }
@@ -432,14 +422,13 @@ class Unit {
     }
 }
 
-// Спавн
 const yakub = new Unit('Якуб', 'Штурмовик', 1, 1, 12, 4, false, 0xff0033, 0x3d3226);
 const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4, true, 0x00ff66, 0x223322);
 
 units.push(yakub, reva);
 selectedUnit = yakub;
 
-// Загрузка GLB
+// ЗАГРУЗКА И ВЫРАВНИВАНИЕ ВЫСОТЫ 3D-МОДЕЛЕЙ (BOX3 ALIGNMENT)
 function loadModelSafely(unitObj, modelPath, visorColor) {
     if (typeof THREE.GLTFLoader === 'undefined') return;
 
@@ -451,13 +440,29 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                 unitObj.mesh.clear();
                 const model = gltf.scene;
                 model.scale.set(1.1, 1.1, 1.1);
-                model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+
+                model.traverse(n => {
+                    if (n.isMesh) {
+                        n.castShadow = true;
+                        n.receiveShadow = true;
+                    }
+                });
+
+                // Вычисление габаритов и подъем модели, чтобы подошвы стояли на y = 0
+                const box = new THREE.Box3().setFromObject(model);
+                model.position.y = -box.min.y;
+
                 unitObj.mesh.add(model);
 
+                // Определение верхней точки головы для размещения свечения
+                const updatedBox = new THREE.Box3().setFromObject(model);
+                const headY = updatedBox.max.y * 0.85;
+
                 const vLight = new THREE.PointLight(visorColor, 3, 3);
-                vLight.position.set(0, 1.5, 0.3);
+                vLight.position.set(0, headY, 0.3);
                 unitObj.mesh.add(vLight);
-                addLog(`Файл ${modelPath} подключен!`, 'player');
+
+                addLog(`Файл ${modelPath} применен и выравнен по полу!`, 'player');
             } catch (err) { console.error(err); }
         },
         null,
@@ -468,7 +473,6 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
 loadModelSafely(yakub, './models/yakub.glb', 0xff0033);
 loadModelSafely(reva, './models/reva.glb', 0x00ff66);
 
-// РАСЧЕТ ШАНСА ПОПАДАНИЯ И ОГРАНИЧЕНИЕ 4 КЛЕТКИ
 function calculateHitChance(attacker, target) {
     const dist = Math.abs(attacker.gridX - target.gridX) + Math.abs(attacker.gridZ - target.gridZ);
 
@@ -496,7 +500,6 @@ function calculateHitChance(attacker, target) {
     return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist };
 }
 
-// КЛИКИ И УПРАВЛЕНИЕ
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -559,7 +562,6 @@ function closeTargetPanel() {
     currentTarget = null;
 }
 
-// ВЫСТРЕЛ
 document.getElementById('shoot-btn').addEventListener('click', () => {
     if (!selectedUnit || !currentTarget || isEnemyTurn || isGameOver) return;
 
@@ -595,7 +597,6 @@ document.getElementById('shoot-btn').addEventListener('click', () => {
     if (currentTarget && currentTarget.hp > 0) openTargetPanel(currentTarget);
 });
 
-// БЛИЖНИЙ БОЙ (1 КВЕТКА)
 document.getElementById('melee-btn').addEventListener('click', () => {
     if (!selectedUnit || isEnemyTurn || isGameOver) return;
 
@@ -604,7 +605,6 @@ document.getElementById('melee-btn').addEventListener('click', () => {
         return;
     }
 
-    // Ищем врага ровно на расстоянии 1 клетки
     const target = units.find(u => u.isEnemy && (Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ)) === 1);
 
     if (!target) {
@@ -613,9 +613,8 @@ document.getElementById('melee-btn').addEventListener('click', () => {
     }
 
     selectedUnit.ap -= 2;
-    const damage = Math.floor(Math.random() * 4) + 5; // 5-8 урона
+    const damage = Math.floor(Math.random() * 4) + 5;
 
-    // Поворот к цели
     const dx = target.gridX - selectedUnit.gridX;
     const dz = target.gridZ - selectedUnit.gridZ;
     selectedUnit.mesh.rotation.y = Math.atan2(dx, dz);
@@ -630,7 +629,6 @@ document.getElementById('melee-btn').addEventListener('click', () => {
     highlightMoveRange();
 });
 
-// КИБЕР-ИМПУЛЬС
 document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
     if (!selectedUnit || isEnemyTurn || isGameOver) return;
 
@@ -662,7 +660,6 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
     highlightMoveRange();
 });
 
-// ИИ ВРАГА (РЕВА)
 async function runEnemyAI() {
     if (isGameOver) return;
 
@@ -692,17 +689,15 @@ async function runEnemyAI() {
 
             const distToPlayer = Math.abs(enemyUnit.gridX - yakub.gridX) + Math.abs(enemyUnit.gridZ - yakub.gridZ);
 
-            // 1. Если ИИ вплотную (1 клетка) -> АТАКА БЛИЖНЕГО БОЯ
             if (distToPlayer === 1 && enemyUnit.ap >= 2) {
                 enemyUnit.ap -= 2;
-                const damage = Math.floor(Math.random() * 3) + 4; // 4-6 урона
+                const damage = Math.floor(Math.random() * 3) + 4;
 
                 spawnMeleeVFX(enemyUnit.mesh.position, yakub.mesh.position);
                 showFloatingText(`УДАР! -${damage}`, yakub.mesh.position, '#ff5964');
                 addLog(`РЕВА НАНОСИТ УДАР ВПЛОТНУЮ! Якуб получил ${damage} урона!`, 'enemy');
                 yakub.takeDamage(damage);
             }
-            // 2. Если в пределах 4 клеток -> СТРЕЛЬБА
             else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                 enemyUnit.ap -= 2;
 
@@ -726,7 +721,6 @@ async function runEnemyAI() {
                     addLog(`Рева выстрелила и промахнулась!`, 'player');
                 }
             } 
-            // 3. Иначе -> СОКРАЩЕНИЕ ДИСТАНЦИИ
             else if (enemyUnit.ap > 0) {
                 let stepX = enemyUnit.gridX + Math.sign(yakub.gridX - enemyUnit.gridX);
                 let stepZ = enemyUnit.gridZ + Math.sign(yakub.gridZ - enemyUnit.gridZ);
@@ -760,7 +754,6 @@ document.getElementById('end-turn-btn').addEventListener('click', () => {
     if (!isEnemyTurn && !isGameOver) runEnemyAI();
 });
 
-// ТАБЛИЧКА "КОНЕЦ ИГРЫ"
 function triggerGameOver(isVictory) {
     isGameOver = true;
     closeTargetPanel();
@@ -782,13 +775,11 @@ function triggerGameOver(isVictory) {
     modal.style.display = 'flex';
 }
 
-// КНОПКА "НАЧАТЬ ЗАНОВО"
 document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('game-over-modal').style.display = 'none';
     isGameOver = false;
     isEnemyTurn = false;
 
-    // Перезапуск всех бойцов
     if (!units.includes(yakub)) units.push(yakub);
     if (!units.includes(reva)) units.push(reva);
 
@@ -805,7 +796,6 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     addLog('--- НОВЫЙ БОЙ НАЧАТ ---', 'player');
 });
 
-// ПОДСВЕТКА СЕТКИ
 function highlightMoveRange() {
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
