@@ -6,10 +6,13 @@
     <title>HYNMOTA: Desert Tactics 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #0b0806; font-family: 'Courier New', monospace; color: #d4a359; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
         
-        /* Плашка вывода ошибок на экран (для тестов на телефоне/Quest) */
+        #canvas-container {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1; display: block;
+        }
+        
         #error-overlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(25, 5, 5, 0.95); color: #ff5555; font-family: monospace;
@@ -17,11 +20,11 @@
         }
 
         #hud {
-            position: absolute; top: 12px; left: 12px; right: 12px;
+            position: absolute; top: 12px; left: 12px; right: 12px; z-index: 10;
             pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
         }
         .panel {
-            background: rgba(15, 11, 8, 0.92); border: 2px solid #8b6d43; border-radius: 6px;
+            background: rgba(15, 11, 8, 0.94); border: 2px solid #8b6d43; border-radius: 6px;
             padding: 12px 16px; box-shadow: 0 0 20px rgba(0,0,0,0.95); pointer-events: auto; min-width: 200px;
         }
         .panel h2 { margin: 0 0 6px 0; font-size: 15px; color: #ff9d00; text-transform: uppercase; border-bottom: 1px solid #554228; padding-bottom: 4px; }
@@ -29,7 +32,7 @@
         .ap-badge { background: #2b7a3e; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
         #target-panel {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
             display: none; background: rgba(25, 10, 10, 0.95); border: 2px solid #ff3333;
             border-radius: 6px; padding: 12px 20px; text-align: center; pointer-events: auto;
         }
@@ -37,7 +40,7 @@
         .hit-rate { font-size: 18px; font-weight: bold; color: #00ff66; margin: 6px 0; }
         
         #controls-panel {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;
             display: flex; gap: 10px; pointer-events: auto;
         }
         .btn {
@@ -50,7 +53,7 @@
         .btn:active:not(:disabled) { transform: translateY(2px); }
 
         #log-box {
-            position: absolute; bottom: 80px; left: 12px; width: 330px; max-height: 135px;
+            position: absolute; bottom: 80px; left: 12px; z-index: 10; width: 330px; max-height: 135px;
             overflow-y: auto; background: rgba(10, 8, 6, 0.92); border: 1px solid #554228;
             color: #a89474; font-size: 11px; padding: 8px; border-radius: 4px; pointer-events: none;
         }
@@ -61,7 +64,7 @@
         .log-entry.ability { color: #00ccff; font-weight: bold; }
 
         #floating-text-container {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 20;
             pointer-events: none; overflow: hidden;
         }
         .dmg-text {
@@ -72,25 +75,23 @@
         }
     </style>
 
-    <!-- Перехватщик ошибок для вывода на экран -->
     <script>
         window.addEventListener('error', function(e) {
             var errBox = document.getElementById('error-overlay');
             if (errBox) {
                 errBox.style.display = 'block';
-                errBox.innerHTML += '<div><b>[ОШИБКА CODE]:</b> ' + e.message + ' (файл: ' + e.filename + ', строка: ' + e.lineno + ')</div>';
+                errBox.innerHTML += '<div><b>[СБОЙ]:</b> ' + e.message + '</div>';
             }
         });
     </script>
 
-    <!-- Подключение Three.js и контроллеров -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
-    <div id="error-overlay"><h3>ОБНАРУЖЕНА ОШИБКА ВЫПОЛНЕНИЯ:</h3></div>
+    <div id="error-overlay"><h3>ОШИБКА ОТРИСОВКИ 3D:</h3></div>
     <div id="canvas-container"></div>
     <div id="floating-text-container"></div>
 
@@ -107,7 +108,6 @@
         </div>
     </div>
 
-    <!-- ОКНО АТАКИ -->
     <div id="target-panel">
         <h3 id="target-name">Цель: Рева</h3>
         <div style="font-size: 11px; color: #aaa;" id="target-cover">Укрытие: Нет</div>
@@ -116,7 +116,8 @@
     </div>
 
     <div id="log-box">
-        <div class="log-entry">Тактический интерфейс запущен...</div>
+        <div class="log-entry">Песчаная локация загружена.</div>
+        <div class="log-entry">Нажмите на подсвеченную клетку для перемещения.</div>
     </div>
 
     <div id="controls-panel">
@@ -125,67 +126,109 @@
     </div>
 
 <script>
-// --- СЦЕНА ---
+// --- ИНИЦИАЛИЗА 3D-СЦЕНЫ ---
 const GRID_SIZE = 10;
 const TILE_SIZE = 2;
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x120e0a);
-scene.fog = new THREE.FogExp2(0x120e0a, 0.025);
+// Тёплая темная атмосфера пустыни
+scene.background = new THREE.Color(0x16100a);
+scene.fog = new THREE.FogExp2(0x16100a, 0.022);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(8, 14, 18);
+camera.position.set(10, 16, 20);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.dampingFactor = 0.05;
 controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
 
-scene.add(new THREE.AmbientLight(0xd4a359, 0.5));
-const sunLight = new THREE.DirectionalLight(0xffdfa9, 1.4);
+// --- ОСВЕЩЕНИЕ МИРА ---
+const ambientLight = new THREE.AmbientLight(0xd4a359, 0.6);
+scene.add(ambientLight);
+
+// Главный свет солнца
+const sunLight = new THREE.DirectionalLight(0xffdfa9, 1.3);
 sunLight.position.set(15, 25, 10);
 sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 1024;
+sunLight.shadow.mapSize.height = 1024;
 scene.add(sunLight);
 
-// Сетка
+// Холодный контурный свет (Grimdark Rim Light)
+const rimLight = new THREE.DirectionalLight(0x3a556a, 0.7);
+rimLight.position.set(-15, 12, -10);
+scene.add(rimLight);
+
+// --- ПЕРЕРАБОТАННЫЕ ТЕКСТУРЫ И МАТЕРИАЛЫ МИРА ---
+const tileBaseMat = new THREE.MeshLambertMaterial({ color: 0x322518 });
+const tileEdgeMat = new THREE.MeshBasicMaterial({ color: 0x5a442e, wireframe: true });
+const coverMat = new THREE.MeshStandardMaterial({ color: 0x221a12, roughness: 0.85, metalness: 0.2 });
+const coverMetalMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1d, roughness: 0.5, metalness: 0.6 });
+
+// СЕТКА ПОЛЯ БОЯ
 const gridTiles = [];
-const tileGeo = new THREE.BoxGeometry(TILE_SIZE - 0.1, 0.2, TILE_SIZE - 0.1);
+const tileGeo = new THREE.BoxGeometry(TILE_SIZE - 0.08, 0.2, TILE_SIZE - 0.08);
 
 for (let x = 0; x < GRID_SIZE; x++) {
     gridTiles[x] = [];
     for (let z = 0; z < GRID_SIZE; z++) {
-        const tileMat = new THREE.MeshStandardMaterial({ color: 0x3a2d1f, roughness: 0.9 });
-        const tile = new THREE.Mesh(tileGeo, tileMat);
-        tile.position.set(x * TILE_SIZE, -0.1, z * TILE_SIZE);
-        tile.receiveShadow = true;
-        tile.userData = { gridX: x, gridZ: z, isTile: true, defaultColor: 0x3a2d1f };
-        scene.add(tile);
-        gridTiles[x][z] = tile;
+        const tileMesh = new THREE.Mesh(tileGeo, tileBaseMat.clone());
+        tileMesh.position.set(x * TILE_SIZE, -0.1, z * TILE_SIZE);
+        tileMesh.receiveShadow = true;
+        
+        // Рельефная контурная рамка вокруг каждой клетки
+        const wireframe = new THREE.LineSegments(
+            new THREE.EdgesGeometry(tileGeo),
+            tileEdgeMat
+        );
+        tileMesh.add(wireframe);
+
+        tileMesh.userData = { gridX: x, gridZ: z, isTile: true, defaultColor: 0x322518 };
+        scene.add(tileMesh);
+        gridTiles[x][z] = tileMesh;
     }
 }
 
-// Укрытия
+// УКРЫТИЯ И РУИНЫ
 function createCover(x, z, height = 1.3) {
-    const geo = new THREE.BoxGeometry(TILE_SIZE * 0.8, height, TILE_SIZE * 0.8);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x282017, roughness: 0.9 });
-    const cover = new THREE.Mesh(geo, mat);
-    cover.position.set(x * TILE_SIZE, height / 2, z * TILE_SIZE);
-    cover.castShadow = true;
-    cover.receiveShadow = true;
-    scene.add(cover);
+    const group = new THREE.Group();
+    
+    // Основной блок укрытия
+    const geo = new THREE.BoxGeometry(TILE_SIZE * 0.82, height, TILE_SIZE * 0.82);
+    const coverMesh = new THREE.Mesh(geo, coverMat);
+    coverMesh.position.y = height / 2;
+    coverMesh.castShadow = true;
+    coverMesh.receiveShadow = true;
+    group.add(coverMesh);
+
+    // Металлическая пластина сверху
+    const topCap = new THREE.Mesh(new THREE.BoxGeometry(TILE_SIZE * 0.86, 0.1, TILE_SIZE * 0.86), coverMetalMat);
+    topCap.position.y = height + 0.05;
+    topCap.castShadow = true;
+    group.add(topCap);
+
+    group.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
+    scene.add(group);
+
     gridTiles[x][z].userData.blocked = true;
     gridTiles[x][z].userData.isCover = true;
 }
-createCover(3, 3);
-createCover(3, 4);
-createCover(6, 6);
 
-// ЭФФЕКТЫ (VFX)
+// Размещение укрытий на карте
+createCover(3, 3, 1.2);
+createCover(3, 4, 1.2);
+createCover(6, 6, 1.8);
+createCover(2, 7, 1.4);
+
+// --- ВЕКТОРНЫЕ VFX ЭФФЕКТЫ ---
 function spawnTracer(startPos, endPos, isHit) {
     const points = [startPos.clone().add(new THREE.Vector3(0, 1.2, 0)), endPos.clone().add(new THREE.Vector3(0, 1.0, 0))];
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -251,7 +294,7 @@ function showFloatingText(text, worldPos, color = '#ff3333') {
     setTimeout(() => { el.remove(); }, 800);
 }
 
-// ЮНИТЫ
+// --- КЛАСС ЮНИТОВ ---
 const units = [];
 let selectedUnit = null;
 let currentTarget = null;
@@ -273,21 +316,21 @@ class Unit {
         this.mesh = new THREE.Group();
         this.mesh.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
 
-        // Встроенная модель-аватар
+        // Стильный 3D-аватар
         const bodyGeo = new THREE.CylinderGeometry(0.35, 0.35, 1.4, 12);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor });
+        const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         body.position.y = 0.7;
         body.castShadow = true;
         this.mesh.add(body);
 
-        const visorGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const visorGeo = new THREE.SphereGeometry(0.12, 12, 12);
         const visorMat = new THREE.MeshBasicMaterial({ color: visorColor });
         const visor = new THREE.Mesh(visorGeo, visorMat);
         visor.position.set(0, 1.25, 0.3);
         this.mesh.add(visor);
 
-        const vLight = new THREE.PointLight(visorColor, 2, 3);
+        const vLight = new THREE.PointLight(visorColor, 2.5, 3.5);
         vLight.position.set(0, 1.25, 0.35);
         this.mesh.add(vLight);
 
@@ -325,7 +368,7 @@ class Unit {
     }
 }
 
-// Создаем бойцов
+// Спавн Якуба и Ревы
 const yakub = new Unit('Якуб', 'Штурмовик', 1, 1, 12, 4, false, 0xff0033, 0x3d3226);
 units.push(yakub);
 selectedUnit = yakub;
@@ -333,7 +376,7 @@ selectedUnit = yakub;
 const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4, true, 0x00ff66, 0x223322);
 units.push(reva);
 
-// БЕЗОПАСНАЯ ЗАГРУЗКА GLB МОДЕЛЕЙ
+// Безопасная подгрузка GLB моделей
 function loadModelSafely(unitObj, modelPath, visorColor) {
     if (typeof THREE.GLTFLoader === 'undefined') return;
 
@@ -357,14 +400,14 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                 vLight.position.set(0, 1.5, 0.3);
                 unitObj.mesh.add(vLight);
 
-                addLog(`3D-файл ${modelPath} подключен!`, 'player');
+                addLog(`Файл ${modelPath} применен к бойцу!`, 'player');
             } catch (err) {
                 console.error(err);
             }
         },
         null,
         () => {
-            addLog(`Файл ${modelPath} пока не найден. Используется встроенный аватар.`, 'enemy');
+            addLog(`Загрузка ${modelPath}: используется 3D-аватар.`, 'player');
         }
     );
 }
@@ -393,7 +436,7 @@ function calculateHitChance(attacker, target) {
     return { chance: baseChance, cover: coverType };
 }
 
-// КЛИКИ
+// УПРАВЛЕНИЕ КЛИКАМИ
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -445,7 +488,7 @@ function closeTargetPanel() {
     currentTarget = null;
 }
 
-// ВЫСТРЕЛ ИГРОКА
+// ВЫСТРЕЛ
 document.getElementById('shoot-btn').addEventListener('click', () => {
     if (!selectedUnit || !currentTarget || isEnemyTurn) return;
 
@@ -508,7 +551,7 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', () => {
     highlightMoveRange();
 });
 
-// ТАКТИЧЕСКИЙ ИИ РЕВЫ
+// ИИ ВРАГА (РЕВА)
 async function runEnemyAI() {
     isEnemyTurn = true;
     closeTargetPanel();
@@ -590,6 +633,7 @@ document.getElementById('end-turn-btn').addEventListener('click', () => {
     if (!isEnemyTurn) runEnemyAI();
 });
 
+// ПОДСВЕТКА СЕТКИ
 function highlightMoveRange() {
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
@@ -603,3 +647,43 @@ function highlightMoveRange() {
         for (let z = 0; z < GRID_SIZE; z++) {
             const dist = Math.abs(selectedUnit.gridX - x) + Math.abs(selectedUnit.gridZ - z);
             if (dist <= selectedUnit.ap && dist > 0 && !gridTiles[x][z].userData.blocked) {
+                gridTiles[x][z].material.color.setHex(0x1e4a2c);
+            }
+        }
+    }
+}
+highlightMoveRange();
+
+function updateUI() {
+    if (selectedUnit) {
+        document.getElementById('unit-name').innerText = selectedUnit.name;
+        document.getElementById('unit-hp').innerText = `${selectedUnit.hp} / ${selectedUnit.maxHp}`;
+        document.getElementById('unit-ap').innerText = selectedUnit.ap;
+    }
+}
+
+function addLog(text, type = '') {
+    const logBox = document.getElementById('log-box');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerText = `> ${text}`;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ЦИКЛ ОТРИСОВКИ
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
