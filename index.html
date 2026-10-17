@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Tactical Main Menu & Selection 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HYNMOTA: Mobile Tactical 3D</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; touch-action: manipulation; }
         
         #canvas-container {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -22,134 +22,131 @@
         /* ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ПЕРСОНАЖА ---------------- */
         #main-menu {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500;
-            background: rgba(8, 5, 3, 0.92); backdrop-filter: blur(10px);
-            display: flex; justify-content: center; align-items: center;
+            background: rgba(8, 5, 3, 0.95); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center; padding: 12px;
         }
         .menu-box {
             position: relative;
-            background: rgba(18, 13, 8, 0.96); border: 2px solid #8b6d43; border-top: 4px solid #ff9d00;
-            border-radius: 8px; padding: 35px 45px; text-align: center;
-            box-shadow: 0 0 45px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 157, 0, 0.15);
-            max-width: 92vw; width: 420px;
+            background: rgba(18, 13, 8, 0.98); border: 2px solid #8b6d43; border-top: 4px solid #ff9d00;
+            border-radius: 8px; padding: 25px 20px; text-align: center;
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.9);
+            width: 100%; max-width: 400px;
         }
-        .menu-title { font-size: 42px; margin: 0; color: #ff9d00; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 15px rgba(255,157,0,0.4); }
-        .menu-subtitle { font-size: 12px; color: #8b6d43; letter-spacing: 3px; font-weight: bold; margin-top: 4px; text-transform: uppercase; }
-        .menu-divider { height: 1px; background: linear-gradient(90deg, transparent, #8b6d43, transparent); margin: 25px 0; }
+        .menu-title { font-size: 36px; margin: 0; color: #ff9d00; letter-spacing: 3px; text-transform: uppercase; }
+        .menu-subtitle { font-size: 11px; color: #8b6d43; letter-spacing: 2px; font-weight: bold; margin-top: 4px; text-transform: uppercase; }
+        .menu-divider { height: 1px; background: linear-gradient(90deg, transparent, #8b6d43, transparent); margin: 20px 0; }
         
         .btn-menu-primary {
             background: linear-gradient(180deg, #d4a359 0%, #8b6d43 100%);
-            border: 1px solid #ffd89b; color: #120e0a; font-size: 16px; font-weight: bold;
-            width: 100%; padding: 16px; cursor: pointer; border-radius: 4px; text-transform: uppercase;
-            letter-spacing: 2px; box-shadow: 0 6px 20px rgba(0,0,0,0.8); transition: all 0.2s ease;
+            border: 1px solid #ffd89b; color: #120e0a; font-size: 15px; font-weight: bold;
+            width: 100%; padding: 15px; cursor: pointer; border-radius: 4px; text-transform: uppercase;
+            letter-spacing: 2px; box-shadow: 0 4px 15px rgba(0,0,0,0.8);
         }
-        .btn-menu-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(255, 157, 0, 0.5); color: #fff; }
 
         .music-toggle-btn {
-            position: absolute; top: 12px; right: 12px; background: rgba(30, 20, 12, 0.8);
+            position: absolute; top: 10px; right: 10px; background: rgba(30, 20, 12, 0.9);
             border: 1px solid #8b6d43; color: #ffd89b; font-family: inherit; font-size: 10px;
-            padding: 5px 9px; border-radius: 4px; cursor: pointer; text-transform: uppercase;
+            padding: 6px 10px; border-radius: 4px; cursor: pointer; text-transform: uppercase;
         }
-        .music-toggle-btn:hover { border-color: #ff9d00; color: #fff; }
 
-        /* КАРТОЧКИ ВЫБОРА ПЕРСОНАЖА */
-        .char-cards-container { display: flex; gap: 16px; justify-content: center; margin-top: 15px; }
-        .char-card {
-            flex: 1; background: rgba(12, 9, 6, 0.92); border: 1px solid #554228; border-radius: 6px;
-            padding: 18px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;
-            transition: all 0.2s ease;
+        /* КАРТОЧКИ ВЫБОРА ПЕРСОНАЖА (Адаптив под экран смартфона) */
+        .char-cards-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        @media(min-width: 500px) {
+            .char-cards-container { flex-direction: row; }
         }
-        .char-card:hover { border-color: #ff9d00; transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
-        .char-card-header { font-size: 20px; font-weight: bold; color: #ff9d00; letter-spacing: 1px; }
-        .char-card-class { font-size: 11px; color: #8b6d43; text-transform: uppercase; margin-bottom: 12px; }
-        .char-card-stats { font-size: 11px; color: #d4a359; line-height: 1.6; margin-bottom: 16px; }
+        .char-card {
+            flex: 1; background: rgba(12, 9, 6, 0.95); border: 1px solid #554228; border-radius: 6px;
+            padding: 14px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .char-card-header { font-size: 18px; font-weight: bold; color: #ff9d00; letter-spacing: 1px; }
+        .char-card-class { font-size: 10px; color: #8b6d43; text-transform: uppercase; margin-bottom: 8px; }
+        .char-card-stats { font-size: 11px; color: #d4a359; line-height: 1.5; margin-bottom: 12px; }
         .char-card-stats span { color: #888; }
 
-        /* МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" */
+        /* МОДАЛЬНОЕ ОКНО КОНЕЦ ИГРЫ */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 600;
-            background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
-            text-align: center;
+            background: rgba(8, 5, 3, 0.95); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
         }
         .modal-box {
-            background: rgba(20, 14, 9, 0.96); border: 2px solid #ff9d00; border-radius: 8px;
-            padding: 30px 40px; box-shadow: 0 0 35px rgba(255, 157, 0, 0.25); max-width: 90vw; width: 380px;
+            background: rgba(20, 14, 9, 0.98); border: 2px solid #ff9d00; border-radius: 8px;
+            padding: 25px; width: 100%; max-width: 340px; box-shadow: 0 0 30px rgba(255, 157, 0, 0.25);
         }
-        .modal-box h1 { margin: 0 0 10px 0; font-size: 26px; text-transform: uppercase; letter-spacing: 2px; }
-        .modal-box p { font-size: 13px; color: #d4a359; margin-bottom: 24px; line-height: 1.4; }
+        .modal-box h1 { margin: 0 0 10px 0; font-size: 24px; text-transform: uppercase; }
+        .modal-box p { font-size: 12px; color: #d4a359; margin-bottom: 20px; line-height: 1.4; }
         .btn-restart {
-            background: linear-gradient(180deg, #d4a359 0%, #8b6d43 100%); border: 1px solid #ffd89b; color: #120e0a; font-size: 14px;
-            width: 100%; padding: 14px; font-weight: bold; cursor: pointer; border-radius: 4px;
-            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.8); letter-spacing: 1px;
+            background: linear-gradient(180deg, #d4a359 0%, #8b6d43 100%); border: 1px solid #ffd89b; color: #120e0a; font-size: 13px;
+            width: 100%; padding: 13px; font-weight: bold; cursor: pointer; border-radius: 4px; text-transform: uppercase;
         }
 
-        /* ИГРОВОЙ ИНТЕРФЕЙС */
+        /* ИГРОВОЙ ИНТЕРФЕЙС (Мобильная верстка) */
         #hud-top, #action-deck, #log-box { display: none; }
 
         #hud-top {
-            position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
-            pointer-events: none; justify-content: space-between; align-items: flex-start;
+            position: absolute; top: 8px; left: 8px; right: 8px; z-index: 10;
+            pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
         }
         .hud-panel {
-            background: rgba(12, 9, 6, 0.88); backdrop-filter: blur(6px); border: 1px solid #554228;
-            border-top: 3px solid #ff9d00; border-radius: 6px; padding: 12px 18px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.8); pointer-events: auto; min-width: 230px;
+            background: rgba(12, 9, 6, 0.9); backdrop-filter: blur(6px); border: 1px solid #554228;
+            border-top: 3px solid #ff9d00; border-radius: 6px; padding: 8px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8); pointer-events: auto; flex: 1; max-width: 48%;
         }
-        .unit-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .unit-name { font-size: 16px; font-weight: bold; color: #ff9d00; text-transform: uppercase; letter-spacing: 1px; }
-        .unit-class { font-size: 11px; color: #8b6d43; text-transform: uppercase; }
+        .unit-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .unit-name { font-size: 13px; font-weight: bold; color: #ff9d00; text-transform: uppercase; }
+        .unit-class { font-size: 9px; color: #8b6d43; text-transform: uppercase; }
 
-        .hp-container { margin: 6px 0; }
-        .hp-label { font-size: 11px; color: #aaa; margin-bottom: 3px; display: flex; justify-content: space-between; }
-        .hp-bar-outer { width: 100%; height: 10px; background: rgba(20, 10, 10, 0.8); border: 1px solid #4a2a1f; border-radius: 3px; overflow: hidden; position: relative; }
-        .hp-bar-inner { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3333 0%, #00ff66 100%); transition: width 0.4s ease; }
-        .shield-bar-inner { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #00ffcc; opacity: 0.85; transition: width 0.4s ease; }
+        .hp-container { margin: 4px 0; }
+        .hp-label { font-size: 9px; color: #aaa; margin-bottom: 2px; display: flex; justify-content: space-between; }
+        .hp-bar-outer { width: 100%; height: 8px; background: rgba(20, 10, 10, 0.8); border: 1px solid #4a2a1f; border-radius: 2px; overflow: hidden; position: relative; }
+        .hp-bar-inner { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3333 0%, #00ff66 100%); transition: width 0.3s ease; }
+        .shield-bar-inner { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #00ffcc; opacity: 0.85; transition: width 0.3s ease; }
         
-        .ap-container { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; }
-        .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
-        .ap-dot.empty { background: #1a221b; border-color: #334435; box-shadow: none; }
+        .ap-container { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 11px; }
+        .ap-dot { width: 10px; height: 10px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; }
+        .ap-dot.empty { background: #1a221b; border-color: #334435; }
 
         #target-panel {
-            position: absolute; bottom: 95px; right: 20px; z-index: 10;
-            display: none; background: rgba(18, 10, 8, 0.94); backdrop-filter: blur(8px); border: 1px solid #ff3333;
-            border-right: 3px solid #ff5964; border-radius: 6px; padding: 14px 20px; text-align: left; pointer-events: auto;
-            box-shadow: -5px 8px 25px rgba(0,0,0,0.85); min-width: 270px;
+            position: absolute; bottom: 85px; right: 10px; left: 10px; z-index: 10;
+            display: none; background: rgba(18, 10, 8, 0.96); backdrop-filter: blur(8px); border: 1px solid #ff3333;
+            border-right: 3px solid #ff5964; border-radius: 6px; padding: 12px; text-align: left; pointer-events: auto;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.9); max-width: 400px; margin: 0 auto;
         }
-        #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .hit-rate { font-size: 14px; font-weight: bold; color: #00ff66; margin: 6px 0; }
+        #target-panel h3 { margin: 0 0 4px 0; color: #ff5964; font-size: 13px; text-transform: uppercase; }
+        .hit-rate { font-size: 13px; font-weight: bold; color: #00ff66; margin: 4px 0; }
 
         #confirm-panel {
-            position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%); z-index: 15;
-            display: none; background: rgba(15, 12, 8, 0.95); backdrop-filter: blur(10px);
-            border: 2px solid #ff9d00; border-radius: 8px; padding: 12px 20px;
-            box-shadow: 0 0 30px rgba(255,157,0,0.3); pointer-events: auto; text-align: center;
+            position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 15;
+            display: none; background: rgba(15, 12, 8, 0.96); backdrop-filter: blur(10px);
+            border: 2px solid #ff9d00; border-radius: 8px; padding: 10px 14px; width: 92%; max-width: 360px;
+            box-shadow: 0 0 25px rgba(255,157,0,0.3); pointer-events: auto; text-align: center;
         }
-        #confirm-title { font-size: 12px; font-weight: bold; color: #ffd89b; margin-bottom: 8px; text-transform: uppercase; }
+        #confirm-title { font-size: 11px; font-weight: bold; color: #ffd89b; margin-bottom: 6px; text-transform: uppercase; }
 
         #action-deck {
-            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
-            pointer-events: auto; flex-direction: column; align-items: center; gap: 8px;
+            position: absolute; bottom: 8px; left: 8px; right: 8px; z-index: 10;
+            pointer-events: auto; display: flex; justify-content: center;
         }
         .deck-frame {
-            background: rgba(12, 9, 6, 0.92); backdrop-filter: blur(8px);
+            background: rgba(12, 9, 6, 0.94); backdrop-filter: blur(8px);
             border: 1px solid #8b6d43; border-top: 2px solid #ff9d00; border-radius: 8px;
-            padding: 10px 16px; display: flex; gap: 10px; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1);
+            padding: 8px; display: flex; gap: 6px; width: 100%; max-width: 450px; justify-content: space-between;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.9);
         }
-        .btn-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .key-hint { font-size: 9px; color: #8b6d43; text-transform: uppercase; font-weight: bold; }
+        .btn-slot { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .key-hint { display: none; } /* Скрываем подсказки клавиатуры на мобилках */
         
         .btn-act {
             background: linear-gradient(180deg, #2b2015 0%, #17110b 100%);
-            border: 1px solid #8b6d43; color: #ffd89b; padding: 11px 16px;
-            font-family: inherit; font-size: 12px; font-weight: bold; border-radius: 5px;
-            cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
-            transition: all 0.15s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border: 1px solid #8b6d43; color: #ffd89b; padding: 10px 6px;
+            font-family: inherit; font-size: 10px; font-weight: bold; border-radius: 5px;
+            cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px;
+            width: 100%; transition: all 0.1s ease;
         }
-        .btn-act:hover:not(:disabled) { border-color: #ff9d00; color: #fff; box-shadow: 0 0 12px rgba(255,157,0,0.4); transform: translateY(-1px); }
-        .btn-act:active:not(:disabled) { transform: translateY(1px); }
-        .btn-act:disabled { opacity: 0.35; cursor: not-allowed; border-color: #443523; }
+        .btn-act:active:not(:disabled) { transform: scale(0.96); }
+        .btn-act:disabled { opacity: 0.35; border-color: #443523; }
 
-        .icon-svg { width: 14px; height: 14px; fill: currentColor; display: inline-block; vertical-align: middle; }
+        .icon-svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
 
         .btn-confirm-theme { border-color: #00ff66; color: #ccffdd; background: linear-gradient(180deg, #12421b 0%, #08200d 100%); }
         .btn-cancel-theme { border-color: #ff3333; color: #ffcccc; background: linear-gradient(180deg, #421212 0%, #200808 100%); }
@@ -157,17 +154,16 @@
         .btn-melee-theme { border-color: #ff6633; color: #ffddcc; background: linear-gradient(180deg, #3d1a10 0%, #1a0a05 100%); }
         .btn-ability-theme { border-color: #00ccff; color: #ccf5ff; background: linear-gradient(180deg, #0e2a3b 0%, #06131c 100%); }
         .btn-shield-theme { border-color: #00ffcc; color: #ccffff; background: linear-gradient(180deg, #0e3b33 0%, #061c18 100%); }
-        .btn-end-theme { border-color: #8b6d43; background: linear-gradient(180deg, #3a2e1e 0%, #1c160e 100%); }
+        .btn-end-theme { border-color: #8b6d43; background: linear-gradient(180deg, #3a2e1e 0%, #1c160e 100%); flex: 1.2; }
 
-        .cost-badge { font-size: 10px; opacity: 0.8; background: rgba(0,0,0,0.4); padding: 2px 5px; border-radius: 3px; }
+        .cost-badge { font-size: 9px; opacity: 0.8; background: rgba(0,0,0,0.5); padding: 1px 3px; border-radius: 2px; }
 
         #log-box {
-            position: absolute; bottom: 16px; left: 16px; z-index: 10; width: 300px; max-height: 120px;
-            overflow-y: auto; background: rgba(10, 8, 6, 0.88); backdrop-filter: blur(4px); border: 1px solid #443523;
-            color: #a89474; font-size: 11px; padding: 8px 10px; border-radius: 6px; pointer-events: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            position: absolute; top: 75px; left: 8px; z-index: 10; width: 220px; max-height: 80px;
+            overflow-y: auto; background: rgba(10, 8, 6, 0.85); backdrop-filter: blur(4px); border: 1px solid #443523;
+            color: #a89474; font-size: 9px; padding: 6px; border-radius: 4px; pointer-events: none; display: none;
         }
-        .log-entry { margin-bottom: 4px; line-height: 1.3; }
+        .log-entry { margin-bottom: 2px; line-height: 1.2; }
         .log-entry.player { color: #5bc0be; }
         .log-entry.enemy { color: #ff5964; font-weight: bold; }
         .log-entry.hit { color: #00ff66; font-weight: bold; }
@@ -180,8 +176,8 @@
             pointer-events: none; overflow: hidden;
         }
         .dmg-text {
-            position: absolute; font-family: 'Impact', sans-serif; font-size: 24px;
-            font-weight: bold; text-shadow: 0 0 6px #000, 2px 2px 0 #000;
+            position: absolute; font-family: 'Impact', sans-serif; font-size: 20px;
+            font-weight: bold; text-shadow: 0 0 5px #000, 2px 2px 0 #000;
             transition: transform 0.8s ease-out, opacity 0.8s ease-out;
             will-change: transform, opacity;
         }
@@ -199,20 +195,20 @@
 
     <!-- ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ОПЕРАТОРА ---------------- -->
     <div id="main-menu">
-        <button class="music-toggle-btn" id="music-toggle">🔊 МУЗЫКА: ВКЛ</button>
+        <button class="music-toggle-btn" id="music-toggle">🔊 ЗВУК: ВКЛ</button>
 
         <!-- ЭКРАН 1: СТАРТОВОЕ МЕНЮ -->
         <div id="menu-primary" class="menu-box">
             <h1 class="menu-title">HYNMOTA</h1>
-            <div class="menu-subtitle">DESERT PUNK TACTICS</div>
+            <div class="menu-subtitle">MOBILE TACTICS</div>
             <div class="menu-divider"></div>
             <button class="btn-menu-primary" id="btn-start-game">ИГРАТЬ</button>
         </div>
 
         <!-- ЭКРАН 2: ВЫБОР ПЕРСОНАЖА -->
-        <div id="menu-char-select" class="menu-box" style="display: none; width: 660px; max-width: 95vw;">
-            <div class="menu-subtitle" style="font-size: 16px; color: #ff9d00;">ВЫБОР ОПЕРАТОРА</div>
-            <p style="font-size: 11px; color: #a89474; margin: 8px 0 16px 0;">Выберите вашего персонажа. Второй оператор перейдет под управление ИИ.</p>
+        <div id="menu-char-select" class="menu-box" style="display: none; max-width: 440px;">
+            <div class="menu-subtitle" style="font-size: 14px; color: #ff9d00;">ВЫБОР ОПЕРАТОРА</div>
+            <p style="font-size: 10px; color: #a89474; margin: 6px 0 12px 0;">Выберите своего бойца. Второй перейдет под управление ИИ.</p>
             
             <div class="char-cards-container">
                 <!-- Карточка Якуба -->
@@ -221,13 +217,11 @@
                         <div class="char-card-header">ЯКУБ</div>
                         <div class="char-card-class">Штурмовик</div>
                         <div class="char-card-stats">
-                            <div><span>Здоровье:</span> <b>12 HP</b></div>
-                            <div><span>Очки действий:</span> <b>4 AP</b></div>
-                            <div><span>Способность:</span> <b>Кибер-Импульс</b></div>
-                            <div><span>Специфика:</span> Ближний бой и оглушение</div>
+                            <div><span>HP:</span> <b>12</b> | <span>AP:</span> <b>4</b></div>
+                            <div><span>Спец:</span> Кибер-Импульс</div>
                         </div>
                     </div>
-                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="yakub">ВЫБРАТЬ</button>
+                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="yakub" style="margin-top: 8px; padding: 10px;">ВЫБРАТЬ</button>
                 </div>
 
                 <!-- Карточка Ревы -->
@@ -236,26 +230,24 @@
                         <div class="char-card-header" style="color: #00ff66;">РЕВА</div>
                         <div class="char-card-class">Техно-Специалист</div>
                         <div class="char-card-stats">
-                            <div><span>Здоровье:</span> <b>16 HP</b></div>
-                            <div><span>Очки действий:</span> <b>4 AP</b></div>
-                            <div><span>Способность:</span> <b>Щит-Протокол</b></div>
-                            <div><span>Специфика:</span> Защитный купол (+6 Щит)</div>
+                            <div><span>HP:</span> <b>16</b> | <span>AP:</span> <b>4</b></div>
+                            <div><span>Спец:</span> Щит-Протокол</div>
                         </div>
                     </div>
-                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="reva">ВЫБРАТЬ</button>
+                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="reva" style="margin-top: 8px; padding: 10px;">ВЫБРАТЬ</button>
                 </div>
             </div>
 
-            <button class="btn-act btn-cancel-theme" id="btn-back-to-primary" style="margin-top: 20px; width: 100%; justify-content: center;">НАЗАД В МЕНЮ</button>
+            <button class="btn-act btn-cancel-theme" id="btn-back-to-primary" style="margin-top: 14px; width: 100%; justify-content: center; padding: 10px;">НАЗАД</button>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" -->
+    <!-- МОДАЛЬНОЕ ОКНО КОНЕЦ ИГРЫ -->
     <div id="game-over-modal">
         <div class="modal-box">
             <h1 id="modal-title">ПОРАЖЕНИЕ</h1>
             <p id="modal-msg">Оператор пал в бою.</p>
-            <button class="btn-restart" id="restart-btn">ГЛАВНОЕ МЕНЮ</button>
+            <button class="btn-restart" id="restart-btn">В ГЛАВНОЕ МЕНЮ</button>
         </div>
     </div>
 
@@ -263,80 +255,72 @@
         <div class="hud-panel">
             <div class="unit-title">
                 <span class="unit-name" id="unit-name">Якуб</span>
-                <span class="unit-class" id="unit-class">Штурмовик</span>
+                <span class="unit-class" id="unit-class">Штурм</span>
             </div>
             <div class="hp-container">
-                <div class="hp-label"><span>ЗДОРОВЬЕ / ЩИТ</span><span id="unit-hp-text">12/12</span></div>
+                <div class="hp-label"><span>HEALTH</span><span id="unit-hp-text">12/12</span></div>
                 <div class="hp-bar-outer">
                     <div id="unit-hp-bar" class="hp-bar-inner"></div>
                     <div id="unit-shield-bar" class="shield-bar-inner"></div>
                 </div>
             </div>
             <div class="ap-container">
-                <span style="color: #8b6d43; font-weight: bold; margin-right: 4px;">AP:</span>
-                <div id="ap-dots-container" style="display: flex; gap: 4px;"></div>
+                <span style="color: #8b6d43; font-weight: bold; font-size: 10px;">AP:</span>
+                <div id="ap-dots-container" style="display: flex; gap: 3px;"></div>
             </div>
         </div>
 
-        <div class="hud-panel" style="text-align: right; min-width: 180px;">
-            <div style="font-size: 11px; color: #8b6d43; font-weight: bold; letter-spacing: 1px;">HYNMOTA TACTICS</div>
-            <div style="font-size: 15px; color: #ff9d00; font-weight: bold; margin-top: 4px;" id="turn-display">ХОД ИГРОКА</div>
+        <div class="hud-panel" style="text-align: right;">
+            <div style="font-size: 9px; color: #8b6d43; font-weight: bold;">ХОД</div>
+            <div style="font-size: 13px; color: #ff9d00; font-weight: bold; margin-top: 2px;" id="turn-display">ИГРОК</div>
         </div>
     </div>
 
     <div id="target-panel">
-        <h3 id="target-name">Цель: Рева</h3>
-        <div class="hp-container" style="margin: 8px 0;">
+        <h3 id="target-name">Цель: Враг</h3>
+        <div class="hp-container" style="margin: 4px 0;">
             <div class="hp-label"><span id="target-hp-text">16/16 HP</span></div>
             <div class="hp-bar-outer"><div id="target-hp-bar" class="hp-bar-inner" style="background: #ff3333;"></div></div>
         </div>
-        <div style="font-size: 11px; color: #aaa;" id="target-cover">Защита: Нет</div>
+        <div style="font-size: 10px; color: #aaa;" id="target-cover">Защита: Нет</div>
         <div class="hit-rate" id="hit-chance">Шанс: 85%</div>
-        <div style="display: flex; gap: 6px; margin-top: 8px;">
-            <button class="btn-act btn-shoot-theme" id="shoot-btn" style="flex: 1; justify-content: center;">
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <button class="btn-act btn-shoot-theme" id="shoot-btn" style="flex: 1; padding: 10px;">
                 ОГОНЬ <span class="cost-badge">-2 AP</span>
             </button>
-            <button class="btn-act btn-cancel-theme" id="target-cancel-btn" style="padding: 11px 12px;">✕</button>
+            <button class="btn-act btn-cancel-theme" id="target-cancel-btn" style="padding: 10px 14px;">✕</button>
         </div>
     </div>
 
     <div id="confirm-panel">
-        <div id="confirm-title">Перемещение на [0, 0] (-1 AP)</div>
-        <div style="display: flex; gap: 8px;">
-            <button class="btn-act btn-confirm-theme" id="confirm-btn">✓ Подтвердить [Enter]</button>
-            <button class="btn-act btn-cancel-theme" id="cancel-btn">✕ Отмена [Esc]</button>
+        <div id="confirm-title">Ход на [0, 0] (-1 AP)</div>
+        <div style="display: flex; gap: 6px;">
+            <button class="btn-act btn-confirm-theme" id="confirm-btn" style="padding: 10px;">✓ Идти</button>
+            <button class="btn-act btn-cancel-theme" id="cancel-btn" style="padding: 10px;">✕ Отмена</button>
         </div>
     </div>
 
-    <div id="log-box">
-        <div class="log-entry">Тактический интерфейс запущен.</div>
-    </div>
+    <div id="log-box"></div>
 
     <div id="action-deck">
         <div class="deck-frame">
             <div class="btn-slot">
-                <span class="key-hint">[1]</span>
                 <button class="btn-act btn-melee-theme" id="melee-btn">
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.5 17.5L9.5 2.5L13.5 7.5L18 9L14.5 17.5Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 19L8.5 15.5" stroke="currentColor" stroke-width="2"/><circle cx="5" cy="19" r="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    Ближний бой <span class="cost-badge">-2 AP</span>
+                    Ближний <span class="cost-badge">-2</span>
                 </button>
             </div>
 
-            <!-- ДИНАМИЧЕСКАЯ СПЕЦСПОСОБНОСТЬ -->
             <div class="btn-slot">
-                <span class="key-hint">[2]</span>
                 <button class="btn-act btn-ability-theme" id="ability-btn">
                     <svg class="icon-svg" id="ability-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    <span id="ability-title">Кибер-Импульс</span> <span class="cost-badge">-2 AP</span>
+                    <span id="ability-title">Навык</span> <span class="cost-badge">-2</span>
                 </button>
             </div>
 
-            <div style="width: 1px; height: 32px; background: #554228; margin: 0 4px;"></div>
-
             <div class="btn-slot">
-                <span class="key-hint">[Space]</span>
                 <button class="btn-act btn-end-theme" id="end-turn-btn">
-                    Завершить ход ➔
+                    Конец хода ➔
                 </button>
             </div>
         </div>
@@ -347,14 +331,13 @@ window.addEventListener('error', (e) => {
     const overlay = document.getElementById('error-overlay');
     if (overlay) {
         overlay.style.display = 'block';
-        overlay.innerHTML += `<p style="margin:4px 0;">⚠️ Ошибка: ${e.message} (строка ${e.lineno})</p>`;
+        overlay.innerHTML += `<p style="margin:4px 0;">⚠️ Ошибка: ${e.message} (стр. ${e.lineno})</p>`;
     }
 });
 
 class SoundEngine {
     constructor() {
         this.ctx = null;
-        this.unlocked = false;
         this.isMusicPlaying = false;
         this.isBattleMusicPlaying = false;
         this.musicEnabled = true;
@@ -374,135 +357,30 @@ class SoundEngine {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
-        if (this.ctx && this.ctx.state === 'running') {
-            this.unlocked = true;
-        }
     }
 
     startMenuMusic() {
         this.init();
         if (!this.ctx || this.isMusicPlaying || !this.musicEnabled) return;
-
         this.stopBattleMusic();
         this.isMusicPlaying = true;
         this.stepIndex = 0;
 
         const bpm = 132;
         const stepTime = (60 / bpm) / 4;
-
-        const bassFreqs = [82.41, 82.41, 82.41, 98.00, 82.41, 82.41, 110.00, 98.00];
-        const synthStabs = [164.81, 0, 196.00, 0, 220.00, 164.81, 0, 146.83];
+        const bassFreqs = [82.41, 82.41, 82.41, 98.00];
 
         this.musicTimer = setInterval(() => {
             if (!this.isMusicPlaying || !this.ctx) return;
             const now = this.ctx.currentTime;
             const s = this.stepIndex % 16;
 
-            if (s === 0 || s === 4 || s === 8 || s === 12) {
+            if (s === 0 || s === 8) {
                 const kick = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                kick.type = 'sine';
                 kick.frequency.setValueAtTime(140, now);
-                kick.frequency.exponentialRampToValueAtTime(32, now + 0.12);
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-                kick.connect(gain);
-                gain.connect(this.ctx.destination);
-                kick.start(now);
-                kick.stop(now + 0.12);
-            }
-
-            if (s === 4 || s === 12) {
-                const snare = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                snare.type = 'triangle';
-                snare.frequency.setValueAtTime(220, now);
-                snare.frequency.exponentialRampToValueAtTime(80, now + 0.1);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-                snare.connect(gain);
-                gain.connect(this.ctx.destination);
-                snare.start(now);
-                snare.stop(now + 0.1);
-            }
-
-            const bFreq = bassFreqs[s % bassFreqs.length];
-            const bass = this.ctx.createOscillator();
-            const bGain = this.ctx.createGain();
-            const filter = this.ctx.createBiquadFilter();
-
-            bass.type = 'sawtooth';
-            bass.frequency.setValueAtTime(bFreq, now);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(600, now);
-            filter.frequency.exponentialRampToValueAtTime(180, now + stepTime * 0.9);
-
-            bGain.gain.setValueAtTime(0.18, now);
-            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.9);
-
-            bass.connect(filter);
-            filter.connect(bGain);
-            bGain.connect(this.ctx.destination);
-
-            bass.start(now);
-            bass.stop(now + stepTime * 0.9);
-
-            const leadFreq = synthStabs[s % synthStabs.length];
-            if (leadFreq > 0 && s % 2 === 0) {
-                const lead = this.ctx.createOscillator();
-                const lGain = this.ctx.createGain();
-                lead.type = 'square';
-                lead.frequency.setValueAtTime(leadFreq, now);
-
-                lGain.gain.setValueAtTime(0.08, now);
-                lGain.gain.linearRampToValueAtTime(0.005, now + 0.15);
-
-                lead.connect(lGain);
-                lGain.connect(this.ctx.destination);
-
-                lead.start(now);
-                lead.stop(now + 0.15);
-            }
-
-            this.stepIndex++;
-        }, stepTime * 1000);
-    }
-
-    stopMenuMusic() {
-        if (this.musicTimer) {
-            clearInterval(this.musicTimer);
-            this.musicTimer = null;
-        }
-        this.isMusicPlaying = false;
-    }
-
-    startBattleMusic() {
-        this.init();
-        if (!this.ctx || this.isBattleMusicPlaying || !this.musicEnabled) return;
-
-        this.stopMenuMusic();
-        this.isBattleMusicPlaying = true;
-        this.battleStepIndex = 0;
-
-        const bpm = 140;
-        const stepTime = (60 / bpm) / 4;
-
-        const bassNotes = [73.42, 73.42, 87.31, 73.42, 98.00, 73.42, 87.31, 65.41];
-        const arpeggio = [146.83, 174.61, 220.00, 293.66];
-
-        this.battleMusicTimer = setInterval(() => {
-            if (!this.isBattleMusicPlaying || !this.ctx) return;
-            const now = this.ctx.currentTime;
-            const s = this.battleStepIndex % 16;
-
-            if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) {
-                const kick = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                kick.type = 'sine';
-                kick.frequency.setValueAtTime(160, now);
-                kick.frequency.exponentialRampToValueAtTime(28, now + 0.1);
-                gain.gain.setValueAtTime(0.35, now);
+                kick.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
                 kick.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -510,79 +388,74 @@ class SoundEngine {
                 kick.stop(now + 0.1);
             }
 
-            if (s === 4 || s === 12) {
-                const snare = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                snare.type = 'triangle';
-                snare.frequency.setValueAtTime(250, now);
-                snare.frequency.exponentialRampToValueAtTime(60, now + 0.12);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-                snare.connect(gain);
-                gain.connect(this.ctx.destination);
-                snare.start(now);
-                snare.stop(now + 0.12);
-            }
-
-            const hat = this.ctx.createOscillator();
-            const hGain = this.ctx.createGain();
-            hat.type = 'square';
-            hat.frequency.setValueAtTime(8000, now);
-            hGain.gain.setValueAtTime(s % 4 === 2 ? 0.04 : 0.02, now);
-            hGain.gain.linearRampToValueAtTime(0.001, now + 0.03);
-            hat.connect(hGain);
-            hGain.connect(this.ctx.destination);
-            hat.start(now);
-            hat.stop(now + 0.03);
-
-            const bFreq = bassNotes[Math.floor(s / 2) % bassNotes.length];
+            const bFreq = bassFreqs[Math.floor(s / 4)];
             const bass = this.ctx.createOscillator();
             const bGain = this.ctx.createGain();
-            const filter = this.ctx.createBiquadFilter();
-
             bass.type = 'sawtooth';
             bass.frequency.setValueAtTime(bFreq, now);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(800, now);
-            filter.frequency.exponentialRampToValueAtTime(200, now + stepTime * 0.85);
-
-            bGain.gain.setValueAtTime(0.16, now);
-            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.85);
-
-            bass.connect(filter);
-            filter.connect(bGain);
+            bGain.gain.setValueAtTime(0.12, now);
+            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.8);
+            bass.connect(bGain);
             bGain.connect(this.ctx.destination);
-
             bass.start(now);
-            bass.stop(now + stepTime * 0.85);
+            bass.stop(now + stepTime * 0.8);
 
-            if (s % 2 === 0) {
-                const arpFreq = arpeggio[(s / 2) % arpeggio.length];
-                const arp = this.ctx.createOscillator();
-                const aGain = this.ctx.createGain();
-                arp.type = 'sawtooth';
-                arp.frequency.setValueAtTime(arpFreq, now);
+            this.stepIndex++;
+        }, stepTime * 1000);
+    }
 
-                aGain.gain.setValueAtTime(0.05, now);
-                aGain.gain.linearRampToValueAtTime(0.005, now + 0.1);
+    stopMenuMusic() {
+        if (this.musicTimer) { clearInterval(this.musicTimer); this.musicTimer = null; }
+        this.isMusicPlaying = false;
+    }
 
-                arp.connect(aGain);
-                aGain.connect(this.ctx.destination);
+    startBattleMusic() {
+        this.init();
+        if (!this.ctx || this.isBattleMusicPlaying || !this.musicEnabled) return;
+        this.stopMenuMusic();
+        this.isBattleMusicPlaying = true;
+        this.battleStepIndex = 0;
 
-                arp.start(now);
-                arp.stop(now + 0.1);
+        const bpm = 140;
+        const stepTime = (60 / bpm) / 4;
+        const bassNotes = [73.42, 87.31, 98.00, 65.41];
+
+        this.battleMusicTimer = setInterval(() => {
+            if (!this.isBattleMusicPlaying || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const s = this.battleStepIndex % 16;
+
+            if (s === 0 || s === 6 || s === 8 || s === 14) {
+                const kick = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                kick.frequency.setValueAtTime(150, now);
+                kick.frequency.exponentialRampToValueAtTime(25, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                kick.connect(gain);
+                gain.connect(this.ctx.destination);
+                kick.start(now);
+                kick.stop(now + 0.1);
             }
+
+            const bFreq = bassNotes[Math.floor(s / 4) % bassNotes.length];
+            const bass = this.ctx.createOscillator();
+            const bGain = this.ctx.createGain();
+            bass.type = 'sawtooth';
+            bass.frequency.setValueAtTime(bFreq, now);
+            bGain.gain.setValueAtTime(0.12, now);
+            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.8);
+            bass.connect(bGain);
+            bGain.connect(this.ctx.destination);
+            bass.start(now);
+            bass.stop(now + stepTime * 0.8);
 
             this.battleStepIndex++;
         }, stepTime * 1000);
     }
 
     stopBattleMusic() {
-        if (this.battleMusicTimer) {
-            clearInterval(this.battleMusicTimer);
-            this.battleMusicTimer = null;
-        }
+        if (this.battleMusicTimer) { clearInterval(this.battleMusicTimer); this.battleMusicTimer = null; }
         this.isBattleMusicPlaying = false;
     }
 
@@ -591,15 +464,14 @@ class SoundEngine {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.05);
+        osc.stop(this.ctx.currentTime + 0.04);
     }
 
     playStep() {
@@ -608,14 +480,14 @@ class SoundEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.06);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.08);
+        osc.stop(this.ctx.currentTime + 0.06);
     }
 
     playShoot() {
@@ -624,14 +496,14 @@ class SoundEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(700, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.15);
+        osc.stop(this.ctx.currentTime + 0.12);
     }
 
     playHit() {
@@ -640,14 +512,14 @@ class SoundEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'square';
-        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
+        osc.stop(this.ctx.currentTime + 0.15);
     }
 
     playMelee() {
@@ -656,15 +528,15 @@ class SoundEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(900, this.ctx.currentTime + 0.08);
-        osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.18);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+        osc.frequency.setValueAtTime(250, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(800, this.ctx.currentTime + 0.06);
+        osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.18);
+        osc.stop(this.ctx.currentTime + 0.15);
     }
 
     playPulse() {
@@ -673,14 +545,14 @@ class SoundEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.frequency.setValueAtTime(1000, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(150, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.35);
+        osc.stop(this.ctx.currentTime + 0.3);
     }
 
     playShield() {
@@ -688,63 +560,55 @@ class SoundEngine {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'sine';
         osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.4);
+        osc.stop(this.ctx.currentTime + 0.3);
     }
 
     playVictory() {
         this.init();
         if (!this.ctx) return;
-        const notes = [261.63, 329.63, 392.00, 523.25];
-        notes.forEach((freq, i) => {
+        [261, 329, 392, 523].forEach((f, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.12);
-            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.12);
-            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.12 + 0.35);
+            osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.1);
+            gain.gain.setValueAtTime(0.25, this.ctx.currentTime + i * 0.1);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.1 + 0.3);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + i * 0.12);
-            osc.stop(this.ctx.currentTime + i * 0.12 + 0.35);
+            osc.start(this.ctx.currentTime + i * 0.1);
+            osc.stop(this.ctx.currentTime + i * 0.1 + 0.3);
         });
     }
 
     playDefeat() {
         this.init();
         if (!this.ctx) return;
-        const notes = [300, 250, 200, 140];
-        notes.forEach((freq, i) => {
+        [300, 240, 180, 120].forEach((f, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.18);
-            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.18);
-            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.18 + 0.4);
+            osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.15);
+            gain.gain.setValueAtTime(0.25, this.ctx.currentTime + i * 0.15);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.15 + 0.35);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + i * 0.18);
-            osc.stop(this.ctx.currentTime + i * 0.18 + 0.4);
+            osc.start(this.ctx.currentTime + i * 0.15);
+            osc.stop(this.ctx.currentTime + i * 0.15 + 0.35);
         });
     }
 }
 const sounds = new SoundEngine();
 
-function unlockAudioSystem() {
+window.addEventListener('pointerdown', () => {
     sounds.init();
-    if (!isGameStarted) {
-        sounds.startMenuMusic();
-    }
-}
-window.addEventListener('pointerdown', unlockAudioSystem, { once: true });
-window.addEventListener('click', unlockAudioSystem, { once: true });
+    if (!isGameStarted) sounds.startMenuMusic();
+}, { once: true });
 
 // --- СЦЕНА THREE.JS ---
 const GRID_SIZE = 10;
@@ -755,58 +619,36 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x302014);
 scene.fog = new THREE.FogExp2(0x302014, 0.018);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(10, 16, 20);
+const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(9, 17, 19);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
-
 let controls = null;
 if (typeof THREE.OrbitControls !== 'undefined') {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2.1;
     controls.target.set(GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2, 0, GRID_SIZE * TILE_SIZE / 2 - TILE_SIZE / 2);
-} else {
-    camera.position.set(9, 18, 22);
-    camera.lookAt(9, 0, 9);
 }
-
-const sunGeo = new THREE.SphereGeometry(3.5, 16, 16);
-const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe3aa });
-const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-sunMesh.position.set(32, 45, -15);
-scene.add(sunMesh);
 
 const sunLight = new THREE.DirectionalLight(0xffdfa9, 1.8);
 sunLight.position.set(32, 45, -15);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
-sunLight.shadow.camera.near = 0.5;
-sunLight.shadow.camera.far = 120;
-sunLight.shadow.camera.left = -15;
-sunLight.shadow.camera.right = 30;
-sunLight.shadow.camera.top = 30;
-sunLight.shadow.camera.bottom = -15;
 scene.add(sunLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffb870, 0x1a1008, 0.75);
 scene.add(hemiLight);
 
-const rimLight = new THREE.DirectionalLight(0x3a556a, 0.5);
-rimLight.position.set(-15, 12, -10);
-scene.add(rimLight);
-
 const tileBaseMat = new THREE.MeshLambertMaterial({ color: 0x322518 });
 const tileEdgeMat = new THREE.MeshBasicMaterial({ color: 0x5a442e, wireframe: true });
-const coverMat = new THREE.MeshStandardMaterial({ color: 0x221a12, roughness: 0.85, metalness: 0.2 });
+const coverMat = new THREE.MeshStandardMaterial({ color: 0x221a12, roughness: 0.85 });
 const coverMetalMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1d, roughness: 0.5, metalness: 0.6 });
 
 const gridTiles = [];
@@ -819,10 +661,7 @@ for (let x = 0; x < GRID_SIZE; x++) {
         tileMesh.position.set(x * TILE_SIZE, -0.1, z * TILE_SIZE);
         tileMesh.receiveShadow = true;
         
-        const wireframe = new THREE.LineSegments(
-            new THREE.EdgesGeometry(tileGeo),
-            tileEdgeMat
-        );
+        const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo), tileEdgeMat);
         tileMesh.add(wireframe);
 
         tileMesh.userData = { gridX: x, gridZ: z, isTile: true, defaultColor: 0x322518 };
@@ -850,55 +689,7 @@ function createCover(x, z, height = 1.3, lightType = null) {
 
     const topCap = new THREE.Mesh(new THREE.BoxGeometry(TILE_SIZE * 0.86, 0.1, TILE_SIZE * 0.86), coverMetalMat);
     topCap.position.y = height + 0.05;
-    topCap.castShadow = true;
     group.add(topCap);
-
-    if (lightType === 'sos') {
-        const beaconGroup = new THREE.Group();
-        beaconGroup.position.set(0, height + 0.1, 0);
-
-        const baseMesh = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.15, 0.2, 8),
-            new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 })
-        );
-        beaconGroup.add(baseMesh);
-
-        const capMesh = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.1, 0.1, 0.22, 8),
-            new THREE.MeshBasicMaterial({ color: 0xff0033 })
-        );
-        capMesh.position.y = 0.2;
-        beaconGroup.add(capMesh);
-
-        const redLight = new THREE.SpotLight(0xff0033, 6, 14, Math.PI / 4, 0.5, 1);
-        redLight.position.set(0, 0.25, 0);
-
-        const targetObj = new THREE.Object3D();
-        targetObj.position.set(3, 0.25, 0);
-        beaconGroup.add(targetObj);
-        redLight.target = targetObj;
-
-        beaconGroup.add(redLight);
-        group.add(beaconGroup);
-
-        animatedBeacons.push({ group: beaconGroup, target: targetObj, angle: Math.random() * Math.PI * 2 });
-    } 
-    else if (lightType === 'lantern') {
-        const lanternGroup = new THREE.Group();
-        lanternGroup.position.set(0, height + 0.1, 0);
-
-        const bulbMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.12, 8, 8),
-            new THREE.MeshBasicMaterial({ color: 0xffaa22 })
-        );
-        lanternGroup.add(bulbMesh);
-
-        const pLight = new THREE.PointLight(0xffaa22, 3, 6);
-        pLight.position.set(0, 0.1, 0);
-        lanternGroup.add(pLight);
-
-        group.add(lanternGroup);
-    }
 
     group.position.set(x * TILE_SIZE, 0, z * TILE_SIZE);
     scene.add(group);
@@ -907,15 +698,15 @@ function createCover(x, z, height = 1.3, lightType = null) {
     gridTiles[x][z].userData.isCover = true;
 }
 
-createCover(3, 2, 1.3, 'lantern');
+createCover(3, 2, 1.3);
 createCover(3, 3, 1.3);
-createCover(3, 4, 1.3, 'lantern');
-createCover(6, 5, 1.8, 'sos');
+createCover(3, 4, 1.3);
+createCover(6, 5, 1.8);
 createCover(6, 6, 1.8);
-createCover(2, 7, 1.4, 'lantern');
+createCover(2, 7, 1.4);
 createCover(5, 2, 1.2);
-createCover(7, 3, 1.5, 'lantern');
-createCover(4, 7, 1.3, 'sos');
+createCover(7, 3, 1.5);
+createCover(4, 7, 1.3);
 createCover(2, 5, 1.2);
 
 function spawnTracer(startPos, endPos, isHit) {
@@ -925,19 +716,13 @@ function spawnTracer(startPos, endPos, isHit) {
     const material = new THREE.LineBasicMaterial({ color: isHit ? 0xffaa00 : 0xff3300, linewidth: 3 });
     const line = new THREE.Line(geometry, material);
     scene.add(line);
-
-    const flash = new THREE.PointLight(0xffaa00, 4, 3);
-    flash.position.copy(points[0]);
-    scene.add(flash);
-
-    setTimeout(() => { scene.remove(line); scene.remove(flash); }, 140);
+    setTimeout(() => { scene.remove(line); }, 140);
 }
 
 function spawnMeleeVFX(startPos, targetPos) {
     sounds.playMelee();
     const midPos = new THREE.Vector3().addVectors(startPos, targetPos).multiplyScalar(0.5);
     midPos.y += 1.0;
-
     const ringGeo = new THREE.RingGeometry(0.1, 1.2, 16);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6633, side: THREE.DoubleSide, transparent: true, opacity: 1 });
     const slash = new THREE.Mesh(ringGeo, ringMat);
@@ -945,62 +730,50 @@ function spawnMeleeVFX(startPos, targetPos) {
     slash.rotation.x = Math.PI / 3;
     scene.add(slash);
 
-    const flash = new THREE.PointLight(0xffaa00, 5, 3);
-    flash.position.copy(midPos);
-    scene.add(flash);
-
     let op = 1;
     const anim = () => {
-        op -= 0.12;
+        op -= 0.15;
         ringMat.opacity = op;
         if (op > 0) requestAnimationFrame(anim);
-        else { scene.remove(slash); scene.remove(flash); }
+        else scene.remove(slash);
     };
     anim();
 }
 
 function spawnCyberPulseVFX(pos) {
     sounds.playPulse();
-    const ringGeo = new THREE.RingGeometry(0.2, 1.8, 32);
+    const ringGeo = new THREE.RingGeometry(0.2, 1.8, 24);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ccff, side: THREE.DoubleSide, transparent: true, opacity: 1 });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.set(pos.x, 0.1, pos.z);
     scene.add(ring);
 
-    const flash = new THREE.PointLight(0x00ccff, 6, 4);
-    flash.position.set(pos.x, 1.2, pos.z);
-    scene.add(flash);
-
     let scale = 1;
     const animatePulse = () => {
         scale += 0.15;
         ring.scale.set(scale, scale, scale);
-        ringMat.opacity -= 0.08;
+        ringMat.opacity -= 0.1;
         if (ringMat.opacity > 0) requestAnimationFrame(animatePulse);
-        else { scene.remove(ring); scene.remove(flash); }
+        else scene.remove(ring);
     };
     animatePulse();
 }
 
 function spawnShieldVFX(unitMesh) {
     sounds.playShield();
-    const domeGeo = new THREE.SphereGeometry(1.2, 16, 16);
+    const domeGeo = new THREE.SphereGeometry(1.2, 12, 12);
     const domeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.8 });
     const dome = new THREE.Mesh(domeGeo, domeMat);
     dome.position.set(0, 0.8, 0);
     unitMesh.add(dome);
 
-    const sLight = new THREE.PointLight(0x00ffcc, 5, 4);
-    sLight.position.set(0, 1.0, 0);
-    unitMesh.add(sLight);
-
     let op = 0.8;
     const animShield = () => {
-        op -= 0.03;
+        op -= 0.04;
         domeMat.opacity = op;
         if (op > 0) requestAnimationFrame(animShield);
-        else { unitMesh.remove(dome); unitMesh.remove(sLight); }
+        else unitMesh.remove(dome);
     };
     animShield();
 }
@@ -1022,11 +795,10 @@ function showFloatingText(text, worldPos, color = '#ff3333') {
     document.getElementById('floating-text-container').appendChild(el);
 
     requestAnimationFrame(() => {
-        el.style.transform = 'translateY(-40px) scale(1.2)';
+        el.style.transform = 'translateY(-35px) scale(1.1)';
         el.style.opacity = '0';
     });
-
-    setTimeout(() => { el.remove(); }, 800);
+    setTimeout(() => el.remove(), 800);
 }
 
 let units = [];
@@ -1055,9 +827,7 @@ function findPath(startX, startZ, targetX, targetZ, movingUnit, allowTargetOccup
         const path = queue.shift();
         const current = path[path.length - 1];
 
-        if (current.x === targetX && current.z === targetZ) {
-            return path.slice(1);
-        }
+        if (current.x === targetX && current.z === targetZ) return path.slice(1);
 
         for (let d of dirs) {
             const nx = current.x + d.x;
@@ -1068,7 +838,6 @@ function findPath(startX, startZ, targetX, targetZ, movingUnit, allowTargetOccup
                 if (!visited.has(key)) {
                     const isCover = gridTiles[nx][nz].userData.blocked;
                     const isOccupied = units.some(u => u !== movingUnit && u.hp > 0 && u.gridX === nx && u.gridZ === nz);
-
                     const isTargetTile = (nx === targetX && nz === targetZ);
                     const canWalk = !isCover && (!isOccupied || (isTargetTile && allowTargetOccupied));
 
@@ -1089,32 +858,23 @@ function getNewPatrolTarget(unit) {
         for (let z = 0; z < GRID_SIZE; z++) {
             if (x === unit.gridX && z === unit.gridZ) continue;
             const path = findPath(unit.gridX, unit.gridZ, x, z, unit);
-            if (path && path.length >= 3) {
-                validTiles.push({ x, z });
-            }
+            if (path && path.length >= 3) validTiles.push({ x, z });
         }
     }
-    if (validTiles.length > 0) {
-        return validTiles[Math.floor(Math.random() * validTiles.length)];
-    }
-    return null;
+    return validTiles.length > 0 ? validTiles[Math.floor(Math.random() * validTiles.length)] : null;
 }
 
 function isLineBlockedByCover(x1, z1, x2, z2) {
-    const steps = Math.max(Math.abs(x2 - x1), Math.abs(z2 - z1)) * 15;
+    const steps = Math.max(Math.abs(x2 - x1), Math.abs(z2 - z1)) * 12;
     if (steps === 0) return false;
 
     for (let i = 1; i < steps; i++) {
         const t = i / steps;
         const currX = Math.floor(x1 + 0.5 + (x2 - x1) * t);
         const currZ = Math.floor(z1 + 0.5 + (z2 - z1) * t);
-
         if ((currX === x1 && currZ === z1) || (currX === x2 && currZ === z2)) continue;
-
         if (currX >= 0 && currX < GRID_SIZE && currZ >= 0 && currZ < GRID_SIZE) {
-            if (gridTiles[currX][currZ].userData.isCover) {
-                return true;
-            }
+            if (gridTiles[currX][currZ].userData.isCover) return true;
         }
     }
     return false;
@@ -1122,30 +882,19 @@ function isLineBlockedByCover(x1, z1, x2, z2) {
 
 function calculateHitChance(attacker, target) {
     const dist = Math.abs(attacker.gridX - target.gridX) + Math.abs(attacker.gridZ - target.gridZ);
-
-    if (dist > MAX_SHOOT_RANGE) {
-        return { chance: 0, cover: 'Дистанция > 4 кл.', outOfRange: true, distance: dist, blocked: false };
-    }
-
-    if (isLineBlockedByCover(attacker.gridX, attacker.gridZ, target.gridX, target.gridZ)) {
-        return { chance: 0, cover: 'ЗАБЛОКИРОВАНО УКРЫТИЕМ', outOfRange: false, distance: dist, blocked: true };
-    }
+    if (dist > MAX_SHOOT_RANGE) return { chance: 0, cover: 'Дистанция > 4 кл.', outOfRange: true, distance: dist, blocked: false };
+    if (isLineBlockedByCover(attacker.gridX, attacker.gridZ, target.gridX, target.gridZ)) return { chance: 0, cover: 'УКРЫТИЕ', outOfRange: false, distance: dist, blocked: true };
 
     let baseChance = 85;
-    let coverType = 'Открытая цель (85%)';
+    let coverType = 'Открыто (85%)';
 
     const dirs = [{x: 1, z: 0}, {x: -1, z: 0}, {x: 0, z: 1}, {x: 0, z: -1}];
     const nearCover = dirs.some(d => {
-        const cx = target.gridX + d.x;
-        const cz = target.gridZ + d.z;
+        const cx = target.gridX + d.x, cz = target.gridZ + d.z;
         return cx >= 0 && cx < GRID_SIZE && cz >= 0 && cz < GRID_SIZE && gridTiles[cx][cz].userData.isCover;
     });
 
-    if (nearCover) {
-        baseChance = 45;
-        coverType = 'За укрытием (45%)';
-    }
-
+    if (nearCover) { baseChance = 45; coverType = 'За укрытием (45%)'; }
     return { chance: baseChance, cover: coverType, outOfRange: false, distance: dist, blocked: false };
 }
 
@@ -1153,19 +902,13 @@ class Unit {
     constructor(name, className, x, z, hp, maxAp, isEnemy, visorColor = 0x00ff66, bodyColor = 0x4a2a2a) {
         this.name = name;
         this.className = className;
-        this.startX = x;
-        this.startZ = z;
-        this.gridX = x;
-        this.gridZ = z;
-        this.hp = hp;
-        this.maxHp = hp;
-        this.shield = 0;
-        this.maxShield = 6;
-        this.ap = maxAp;
-        this.maxAp = maxAp;
+        this.startX = x; this.startZ = z;
+        this.gridX = x; this.gridZ = z;
+        this.hp = hp; this.maxHp = hp;
+        this.shield = 0; this.maxShield = 6;
+        this.ap = maxAp; this.maxAp = maxAp;
         this.isEnemy = isEnemy;
         this.isStunned = false;
-
         this.lastKnownPos = null;
         this.patrolTarget = null;
         this.hasSpottedPlayer = false;
@@ -1176,19 +919,14 @@ class Unit {
         const bodyGeo = new THREE.CylinderGeometry(0.35, 0.35, 1.4, 12);
         const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
-        body.position.y = 0.7;
-        body.castShadow = true;
+        body.position.y = 0.7; body.castShadow = true;
         this.mesh.add(body);
 
-        const visorGeo = new THREE.SphereGeometry(0.12, 12, 12);
+        const visorGeo = new THREE.SphereGeometry(0.12, 10, 10);
         const visorMat = new THREE.MeshBasicMaterial({ color: visorColor });
         const visor = new THREE.Mesh(visorGeo, visorMat);
         visor.position.set(0, 1.25, 0.3);
         this.mesh.add(visor);
-
-        const vLight = new THREE.PointLight(visorColor, 2.5, 3.5);
-        vLight.position.set(0, 1.25, 0.35);
-        this.mesh.add(vLight);
 
         this.mesh.userData = { unit: this };
         scene.add(this.mesh);
@@ -1204,44 +942,27 @@ class Unit {
         for (let step of path) {
             const startPos = this.mesh.position.clone();
             const endPos = new THREE.Vector3(step.x * TILE_SIZE, 0, step.z * TILE_SIZE);
-
-            const dx = step.x * TILE_SIZE - startPos.x;
-            const dz = step.z * TILE_SIZE - startPos.z;
-            this.mesh.rotation.y = Math.atan2(dx, dz);
-
+            this.mesh.rotation.y = Math.atan2(endPos.x - startPos.x, endPos.z - startPos.z);
             sounds.playStep();
 
-            const duration = 200;
             const startTime = performance.now();
-
             await new Promise(resolve => {
-                const animateStep = (now) => {
-                    const elapsed = now - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-
-                    this.mesh.position.lerpVectors(startPos, endPos, progress);
-                    this.mesh.position.y = Math.sin(progress * Math.PI) * 0.22;
-
-                    if (progress < 1) {
-                        requestAnimationFrame(animateStep);
-                    } else {
-                        this.mesh.position.y = 0;
-                        resolve();
-                    }
+                const anim = (now) => {
+                    const p = Math.min((now - startTime) / 180, 1);
+                    this.mesh.position.lerpVectors(startPos, endPos, p);
+                    this.mesh.position.y = Math.sin(p * Math.PI) * 0.2;
+                    if (p < 1) requestAnimationFrame(anim);
+                    else { this.mesh.position.y = 0; resolve(); }
                 };
-                requestAnimationFrame(animateStep);
+                requestAnimationFrame(anim);
             });
-
-            this.gridX = step.x;
-            this.gridZ = step.z;
+            this.gridX = step.x; this.gridZ = step.z;
         }
 
         closeTargetPanel();
         cancelPendingAction();
         updateUI();
         highlightMoveRange();
-        addLog(`${this.name} переместился на [${targetX}, ${targetZ}] (-${path.length} AP)`, this.isEnemy ? 'enemy' : 'player');
-        
         isAnimating = false;
         return true;
     }
@@ -1249,17 +970,12 @@ class Unit {
     async animateRecoil(targetPos) {
         const startPos = this.mesh.position.clone();
         const dir = new THREE.Vector3().subVectors(targetPos, startPos).normalize();
-        const recoilPos = startPos.clone().sub(dir.multiplyScalar(0.35));
-
-        this.mesh.rotation.y = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
-
+        const recoil = startPos.clone().sub(dir.multiplyScalar(0.3));
         const startTime = performance.now();
         await new Promise(r => {
             const anim = (now) => {
-                const p = Math.min((now - startTime) / 120, 1);
-                if (p < 0.5) this.mesh.position.lerpVectors(startPos, recoilPos, p * 2);
-                else this.mesh.position.lerpVectors(recoilPos, startPos, (p - 0.5) * 2);
-
+                const p = Math.min((now - startTime) / 100, 1);
+                this.mesh.position.lerpVectors(p < 0.5 ? startPos : recoil, p < 0.5 ? recoil : startPos, p < 0.5 ? p * 2 : (p - 0.5) * 2);
                 if (p < 1) requestAnimationFrame(anim);
                 else { this.mesh.position.copy(startPos); r(); }
             };
@@ -1269,202 +985,53 @@ class Unit {
 
     async animateMeleeLunge(targetPos) {
         const startPos = this.mesh.position.clone();
-        const lungePos = new THREE.Vector3().lerpVectors(startPos, targetPos, 0.65);
-
-        this.mesh.rotation.y = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
-
+        const lunge = new THREE.Vector3().lerpVectors(startPos, targetPos, 0.6);
         const startTime = performance.now();
-        await new Promise(r => {
-            const anim = (now) => {
-                const p = Math.min((now - startTime) / 250, 1);
-                if (p < 0.4) {
-                    this.mesh.position.lerpVectors(startPos, lungePos, p / 0.4);
-                    this.mesh.rotation.x = 0.25;
-                } else {
-                    this.mesh.position.lerpVectors(lungePos, startPos, (p - 0.4) / 0.6);
-                    this.mesh.rotation.x = 0;
-                }
-
-                if (p < 1) requestAnimationFrame(anim);
-                else { this.mesh.position.copy(startPos); this.mesh.rotation.x = 0; r(); }
-            };
-            requestAnimationFrame(anim);
-        });
-    }
-
-    async animateCyberPulse() {
-        const startY = this.mesh.position.y;
-        const startTime = performance.now();
-
-        await new Promise(r => {
-            const anim = (now) => {
-                const p = Math.min((now - startTime) / 350, 1);
-                if (p < 0.5) this.mesh.position.y = startY + Math.sin(p * Math.PI) * 0.8;
-                else this.mesh.position.y = startY + (1 - p) * 0.8;
-
-                if (p < 1) requestAnimationFrame(anim);
-                else { this.mesh.position.y = startY; r(); }
-            };
-            requestAnimationFrame(anim);
-        });
-    }
-
-    async animateTakeDamage() {
-        sounds.playHit();
-        const startPos = this.mesh.position.clone();
-        const startTime = performance.now();
-
         await new Promise(r => {
             const anim = (now) => {
                 const p = Math.min((now - startTime) / 200, 1);
-                if (p < 1) {
-                    this.mesh.position.x = startPos.x + (Math.random() - 0.5) * 0.25;
-                    this.mesh.position.z = startPos.z + (Math.random() - 0.5) * 0.25;
-                    requestAnimationFrame(anim);
-                } else {
-                    this.mesh.position.copy(startPos);
-                    r();
-                }
-            };
-            requestAnimationFrame(anim);
-        });
-    }
-
-    async animateDeath() {
-        const startTime = performance.now();
-        await new Promise(r => {
-            const anim = (now) => {
-                const p = Math.min((now - startTime) / 600, 1);
-                this.mesh.rotation.z = p * (Math.PI / 2);
-                this.mesh.position.y = -p * 0.5;
-
+                this.mesh.position.lerpVectors(p < 0.4 ? startPos : lunge, p < 0.4 ? lunge : startPos, p < 0.4 ? p / 0.4 : (p - 0.4) / 0.6);
                 if (p < 1) requestAnimationFrame(anim);
-                else r();
+                else { this.mesh.position.copy(startPos); r(); }
             };
             requestAnimationFrame(anim);
         });
-        scene.remove(this.mesh);
     }
 
     async takeDamage(amount) {
-        let remainingDmg = amount;
-
-        // Поглощение урона щитом
+        let dmg = amount;
         if (this.shield > 0) {
-            if (this.shield >= remainingDmg) {
-                this.shield -= remainingDmg;
-                remainingDmg = 0;
-                showFloatingText(`ЩИТ ПОГЛОТИЛ!`, this.mesh.position, '#00ffcc');
-            } else {
-                remainingDmg -= this.shield;
-                this.shield = 0;
-                showFloatingText(`ЩИТ ПРОБИТ!`, this.mesh.position, '#00ffcc');
-            }
+            if (this.shield >= dmg) { this.shield -= dmg; dmg = 0; showFloatingText('ПОГЛОЩЕНО!', this.mesh.position, '#00ffcc'); }
+            else { dmg -= this.shield; this.shield = 0; showFloatingText('ЩИТ ПРОБИТ!', this.mesh.position, '#00ffcc'); }
         }
-
-        if (remainingDmg > 0) {
-            this.hp -= remainingDmg;
-            await this.animateTakeDamage();
-        }
+        if (dmg > 0) { this.hp -= dmg; sounds.playHit(); }
 
         if (this.hp <= 0) {
             this.hp = 0;
-            await this.animateDeath();
-
-            const index = units.indexOf(this);
-            if (index > -1) units.splice(index, 1);
-            
+            scene.remove(this.mesh);
+            units.splice(units.indexOf(this), 1);
             closeTargetPanel();
             cancelPendingAction();
-
-            if (!this.isEnemy) {
-                triggerGameOver(false);
-            } else {
-                triggerGameOver(true);
-            }
+            triggerGameOver(!this.isEnemy);
         }
     }
 
     resetUnit() {
-        this.hp = this.maxHp;
-        this.shield = 0;
-        this.ap = this.maxAp;
-        this.gridX = this.startX;
-        this.gridZ = this.startZ;
-        this.isStunned = false;
-        this.lastKnownPos = null;
-        this.patrolTarget = null;
-        this.hasSpottedPlayer = false;
-        this.mesh.rotation.set(0, 0, 0);
+        this.hp = this.maxHp; this.shield = 0; this.ap = this.maxAp;
+        this.gridX = this.startX; this.gridZ = this.startZ;
+        this.isStunned = false; this.lastKnownPos = null; this.hasSpottedPlayer = false;
         this.mesh.position.set(this.startX * TILE_SIZE, 0, this.startZ * TILE_SIZE);
-        if (!scene.children.includes(this.mesh)) {
-            scene.add(this.mesh);
-        }
+        if (!scene.children.includes(this.mesh)) scene.add(this.mesh);
     }
 }
 
-// СОЗДАНИЕ ПЕРСОНАЖЕЙ
-const yakub = new Unit('Якуб', 'Штурмовик', 1, 1, 12, 4, false, 0xff0033, 0x3d3226);
-const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4, true, 0x00ff66, 0x223322);
+const yakub = new Unit('Якуб', 'Штурм', 1, 1, 12, 4, false, 0xff0033, 0x3d3226);
+const reva = new Unit('Рева', 'Техник', 7, 7, 16, 4, true, 0x00ff66, 0x223322);
 
-function loadModelSafely(unitObj, modelPath, visorColor) {
-    if (typeof THREE.GLTFLoader === 'undefined') return;
-
-    try {
-        const loader = new THREE.GLTFLoader();
-        loader.load(
-            modelPath,
-            (gltf) => {
-                try {
-                    unitObj.mesh.clear();
-                    const model = gltf.scene;
-                    model.scale.set(1.1, 1.1, 1.1);
-
-                    model.traverse(n => {
-                        if (n.isMesh) {
-                            n.castShadow = true;
-                            n.receiveShadow = true;
-                        }
-                    });
-
-                    const box = new THREE.Box3().setFromObject(model);
-                    model.position.y = -box.min.y;
-
-                    unitObj.mesh.add(model);
-
-                    const updatedBox = new THREE.Box3().setFromObject(model);
-                    const headY = updatedBox.max.y * 0.85;
-
-                    const vLight = new THREE.PointLight(visorColor, 3, 3);
-                    vLight.position.set(0, headY, 0.3);
-                    unitObj.mesh.add(vLight);
-                } catch (err) { console.warn(err); }
-            },
-            null,
-            () => { addLog(`Файл ${modelPath} не найден: используется 3D-аватар.`, 'player'); }
-        );
-    } catch (err) { console.warn(err); }
-}
-
-loadModelSafely(yakub, './models/yakub.glb', 0xff0033);
-loadModelSafely(reva, './models/reva.glb', 0x00ff66);
-
-// ---------------- ЛОГИКА ГЛАВНОГО МЕНЮ И МУЗЫКИ ----------------
 document.getElementById('music-toggle').addEventListener('click', () => {
     sounds.musicEnabled = !sounds.musicEnabled;
-    const btn = document.getElementById('music-toggle');
-    if (sounds.musicEnabled) {
-        btn.innerText = '🔊 МУЗЫКА: ВКЛ';
-        if (isGameStarted) {
-            sounds.startBattleMusic();
-        } else {
-            sounds.startMenuMusic();
-        }
-    } else {
-        btn.innerText = '🔇 МУЗЫКА: ВЫКЛ';
-        sounds.stopMenuMusic();
-        sounds.stopBattleMusic();
-    }
+    document.getElementById('music-toggle').innerText = sounds.musicEnabled ? '🔊 ЗВУК: ВКЛ' : '🔇 ЗВУК: ВЫКЛ';
+    if (!sounds.musicEnabled) { sounds.stopMenuMusic(); sounds.stopBattleMusic(); }
 });
 
 document.getElementById('btn-start-game').addEventListener('click', () => {
@@ -1483,97 +1050,65 @@ document.getElementById('btn-back-to-primary').addEventListener('click', () => {
 document.querySelectorAll('.btn-select-char').forEach(btn => {
     btn.addEventListener('click', (e) => {
         sounds.playClick();
-
-        const chosenChar = e.currentTarget.getAttribute('data-char');
-
+        const chosen = e.currentTarget.getAttribute('data-char');
         units = [];
-        if (chosenChar === 'yakub') {
-            yakub.isEnemy = false;
-            yakub.startX = 1; yakub.startZ = 1;
-            reva.isEnemy = true;
-            reva.startX = 7; reva.startZ = 7;
-
-            selectedUnit = yakub;
-            units.push(yakub, reva);
+        if (chosen === 'yakub') {
+            yakub.isEnemy = false; yakub.startX = 1; yakub.startZ = 1;
+            reva.isEnemy = true; reva.startX = 7; reva.startZ = 7;
+            selectedUnit = yakub; units.push(yakub, reva);
         } else {
-            reva.isEnemy = false;
-            reva.startX = 1; reva.startZ = 1;
-            yakub.isEnemy = true;
-            yakub.startX = 7; yakub.startZ = 7;
-
-            selectedUnit = reva;
-            units.push(reva, yakub);
+            reva.isEnemy = false; reva.startX = 1; reva.startZ = 1;
+            yakub.isEnemy = true; yakub.startX = 7; yakub.startZ = 7;
+            selectedUnit = reva; units.push(reva, yakub);
         }
 
-        yakub.resetUnit();
-        reva.resetUnit();
-
+        yakub.resetUnit(); reva.resetUnit();
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('hud-top').style.display = 'flex';
         document.getElementById('action-deck').style.display = 'flex';
-        document.getElementById('log-box').style.display = 'block';
-
-        isGameStarted = true;
-        isGameOver = false;
-        isEnemyTurn = false;
+        isGameStarted = true; isGameOver = false; isEnemyTurn = false;
 
         sounds.startBattleMusic();
-
-        document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
-        document.getElementById('turn-display').style.color = '#ff9d00';
-        document.getElementById('end-turn-btn').disabled = false;
-
         setupAbilityButton();
         updateUI();
         highlightMoveRange();
-        addLog(`--- БОЙ НАЧАТ. ВАШ ОПЕРАТОР: ${selectedUnit.name.toUpperCase()} ---`, 'player');
     });
 });
 
-// Настройка внешнего вида спецспособности на HUD
 function setupAbilityButton() {
-    const abilityBtn = document.getElementById('ability-btn');
-    const abilityTitle = document.getElementById('ability-title');
-    const abilityIcon = document.getElementById('ability-icon');
-
+    const btn = document.getElementById('ability-btn');
+    const title = document.getElementById('ability-title');
+    const icon = document.getElementById('ability-icon');
     if (selectedUnit.name === 'Рева') {
-        abilityTitle.innerText = 'Щит-Протокол';
-        abilityBtn.className = 'btn-act btn-shield-theme';
-        abilityIcon.innerHTML = `<path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z" stroke="currentColor" stroke-width="2" fill="none"/>`;
+        title.innerText = 'Щит';
+        btn.className = 'btn-act btn-shield-theme';
+        icon.innerHTML = `<path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z" stroke="currentColor" stroke-width="2" fill="none"/>`;
     } else {
-        abilityTitle.innerText = 'Кибер-Импульс';
-        abilityBtn.className = 'btn-act btn-ability-theme';
-        abilityIcon.innerHTML = `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/>`;
+        title.innerText = 'Импульс';
+        btn.className = 'btn-act btn-ability-theme';
+        icon.innerHTML = `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none"/>`;
     }
 }
 
+// 📱 ТАЧ-КЕЙСЫ (Управление пальцем по экрану)
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-function onPointerDown(event) {
+function handleTouchInput(clientX, clientY) {
     if (!isGameStarted || isEnemyTurn || isGameOver || isAnimating) return;
-    if (event.target !== renderer.domElement) return;
 
-    if (event.button === 2) {
-        cancelPendingAction();
-        return;
-    }
-
-    const x = event.clientX;
-    const y = event.clientY;
-
-    mouse.x = (x / window.innerWidth) * 2 - 1;
-    mouse.y = -(y / window.innerHeight) * 2 + 1;
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     for (let hit of intersects) {
-        let parentGroup = hit.object;
-        while (parentGroup && !parentGroup.userData.unit) parentGroup = parentGroup.parent;
+        let parent = hit.object;
+        while (parent && !parent.userData.unit) parent = parent.parent;
 
-        if (parentGroup && parentGroup.userData.unit) {
-            const unit = parentGroup.userData.unit;
+        if (parent && parent.userData.unit) {
+            const unit = parent.userData.unit;
             if (unit.isEnemy) {
                 sounds.playClick();
                 cancelPendingAction();
@@ -1584,29 +1119,28 @@ function onPointerDown(event) {
         }
 
         if (hit.object.userData && hit.object.userData.isTile && selectedUnit) {
-            const tileX = hit.object.userData.gridX;
-            const tileZ = hit.object.userData.gridZ;
-
-            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, tileX, tileZ, selectedUnit, false);
+            const tx = hit.object.userData.gridX;
+            const tz = hit.object.userData.gridZ;
+            const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, tx, tz, selectedUnit, false);
             if (path && path.length > 0 && path.length <= selectedUnit.ap) {
                 sounds.playClick();
                 closeTargetPanel();
-                stageMoveAction(tileX, tileZ, path.length);
+                stageMoveAction(tx, tz, path.length);
                 return;
             }
         }
     }
 }
 
-renderer.domElement.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointerup', (e) => {
+    handleTouchInput(e.clientX, e.clientY);
+});
 
 function stageMoveAction(x, z, cost) {
     pendingMoveTile = { x, z, cost };
-
     previewMarker.position.set(x * TILE_SIZE, 0.05, z * TILE_SIZE);
     previewMarker.visible = true;
-
-    document.getElementById('confirm-title').innerText = `Перемещение на [${x}, ${z}] (-${cost} AP)`;
+    document.getElementById('confirm-title').innerText = `Идти на [${x}, ${z}] (-${cost} AP)`;
     document.getElementById('confirm-panel').style.display = 'block';
 }
 
@@ -1625,27 +1159,13 @@ function cancelPendingAction() {
 
 function openTargetPanel(target) {
     const calc = calculateHitChance(selectedUnit, target);
-    const shootBtn = document.getElementById('shoot-btn');
-    
     document.getElementById('target-panel').style.display = 'block';
     document.getElementById('target-name').innerText = `Цель: ${target.name}`;
     document.getElementById('target-hp-text').innerText = `${target.hp}/${target.maxHp} HP`;
     document.getElementById('target-hp-bar').style.width = `${(target.hp / target.maxHp) * 100}%`;
     document.getElementById('target-cover').innerText = `Защита: ${calc.cover}`;
-
-    if (calc.blocked) {
-        document.getElementById('hit-chance').innerText = `НЕТ ЛИНИИ ОГНЯ (Укрытие)`;
-        document.getElementById('hit-chance').style.color = '#ff5964';
-        shootBtn.disabled = true;
-    } else if (calc.outOfRange) {
-        document.getElementById('hit-chance').innerText = `ВНЕ ЗОНЫ (Дист: ${calc.distance}/4)`;
-        document.getElementById('hit-chance').style.color = '#ff5964';
-        shootBtn.disabled = true;
-    } else {
-        document.getElementById('hit-chance').innerText = `Шанс: ${calc.chance}% (Дист: ${calc.distance} кл.)`;
-        document.getElementById('hit-chance').style.color = '#00ff66';
-        shootBtn.disabled = false;
-    }
+    document.getElementById('hit-chance').innerText = calc.blocked ? 'НЕТ ЛИНИИ ОГНЯ' : `Шанс: ${calc.chance}%`;
+    document.getElementById('shoot-btn').disabled = calc.blocked || calc.outOfRange;
 }
 
 function closeTargetPanel() {
@@ -1653,335 +1173,151 @@ function closeTargetPanel() {
     currentTarget = null;
 }
 
-document.getElementById('confirm-btn').addEventListener('click', () => {
-    sounds.playClick();
-    executeConfirmedMove();
-});
-
-document.getElementById('cancel-btn').addEventListener('click', () => {
-    sounds.playClick();
-    cancelPendingAction();
-});
-
-document.getElementById('target-cancel-btn').addEventListener('click', () => {
-    sounds.playClick();
-    closeTargetPanel();
-});
+document.getElementById('confirm-btn').addEventListener('click', () => { sounds.playClick(); executeConfirmedMove(); });
+document.getElementById('cancel-btn').addEventListener('click', () => { sounds.playClick(); cancelPendingAction(); });
+document.getElementById('target-cancel-btn').addEventListener('click', () => { sounds.playClick(); closeTargetPanel(); });
 
 document.getElementById('shoot-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!isGameStarted || !selectedUnit || !currentTarget || isEnemyTurn || isGameOver || isAnimating) return;
-
-    if (selectedUnit.ap < 2) {
-        addLog('Недостаточно AP! (Нужно 2 AP)', 'enemy');
-        return;
-    }
-
-    const calc = calculateHitChance(selectedUnit, currentTarget);
-    if (calc.blocked) {
-        addLog('Выстрел невозможно выполнить: между вами укрытие!', 'enemy');
-        return;
-    }
-    if (calc.outOfRange) {
-        addLog('Цель слишком далеко! Максимальная дальность стрельбы — 4 клетки.', 'enemy');
-        return;
-    }
-
+    if (!selectedUnit || !currentTarget || selectedUnit.ap < 2) return;
     isAnimating = true;
     selectedUnit.ap -= 2;
-    const roll = Math.floor(Math.random() * 100);
-    const isHit = roll < calc.chance;
+    const calc = calculateHitChance(selectedUnit, currentTarget);
+    const isHit = Math.random() * 100 < calc.chance;
 
     await selectedUnit.animateRecoil(currentTarget.mesh.position);
     spawnTracer(selectedUnit.mesh.position, currentTarget.mesh.position, isHit);
 
     if (isHit) {
-        const damage = Math.floor(Math.random() * 3) + 4;
-        showFloatingText(`-${damage}`, currentTarget.mesh.position, '#ff3333');
-        addLog(`ПОПАДАНИЕ! ${selectedUnit.name} нанес ${damage} урона по ${currentTarget.name}!`, 'hit');
-        await currentTarget.takeDamage(damage);
+        const dmg = Math.floor(Math.random() * 3) + 4;
+        showFloatingText(`-${dmg}`, currentTarget.mesh.position, '#ff3333');
+        await currentTarget.takeDamage(dmg);
     } else {
-        showFloatingText('ПРОМАХ!', currentTarget.mesh.position, '#ffcc00');
-        addLog(`${selectedUnit.name} ПРОМАХНУЛСЯ по ${currentTarget.name}!`, 'enemy');
+        showFloatingText('ПРОМАХ', currentTarget.mesh.position, '#ffcc00');
     }
-
-    updateUI();
-    highlightMoveRange();
-    if (currentTarget && currentTarget.hp > 0) openTargetPanel(currentTarget);
-    else closeTargetPanel();
+    updateUI(); highlightMoveRange();
+    if (currentTarget && currentTarget.hp > 0) openTargetPanel(currentTarget); else closeTargetPanel();
     isAnimating = false;
 });
 
 document.getElementById('melee-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
-
-    if (selectedUnit.ap < 2) {
-        addLog('Недостаточно AP для ближнего боя! (Нужно 2 AP)', 'enemy');
-        return;
-    }
-
-    const target = units.find(u => u.isEnemy && (Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ)) === 1);
-
-    if (!target) {
-        addLog('Ближний бой доступен только вплотную! (Дистанция 1 клетка)', 'enemy');
-        return;
-    }
+    if (!selectedUnit || selectedUnit.ap < 2) return;
+    const target = units.find(u => u.isEnemy && Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ) === 1);
+    if (!target) return;
 
     isAnimating = true;
     selectedUnit.ap -= 2;
-    const damage = Math.floor(Math.random() * 4) + 5;
-
+    const dmg = Math.floor(Math.random() * 4) + 5;
     await selectedUnit.animateMeleeLunge(target.mesh.position);
     spawnMeleeVFX(selectedUnit.mesh.position, target.mesh.position);
-    showFloatingText(`УДАР! -${damage}`, target.mesh.position, '#ff6633');
-    
-    addLog(`БЛИЖНИЙ БОЙ! ${selectedUnit.name} нанес ${damage} урона клинком по ${target.name}!`, 'melee');
-    await target.takeDamage(damage);
-
-    updateUI();
-    highlightMoveRange();
+    showFloatingText(`УДАР! -${dmg}`, target.mesh.position, '#ff6633');
+    await target.takeDamage(dmg);
+    updateUI(); highlightMoveRange();
     isAnimating = false;
 });
 
-// КНОПКА СПЕЦИАЛЬНОЙ СПОСОБНОСТИ (ЯКУБ: Кибер-Импульс / РЕВА: Щит-Протокол)
 document.getElementById('ability-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
-
-    if (selectedUnit.ap < 2) {
-        addLog('Недостаточно AP для спецспособности! (Нужно 2 AP)', 'enemy');
-        return;
-    }
+    if (!selectedUnit || selectedUnit.ap < 2) return;
 
     if (selectedUnit.name === 'Рева') {
-        // 🛡️ СИЛОВОЙ ЩИТ РЕВЫ
         isAnimating = true;
         selectedUnit.ap -= 2;
         selectedUnit.shield = selectedUnit.maxShield;
-
         spawnShieldVFX(selectedUnit.mesh);
-        showFloatingText('+6 ЩИТ!', selectedUnit.mesh.position, '#00ffcc');
-        addLog(`ЩИТ-ПРОТОКОЛ! Рева активировала купол безопасности (+6 Щит)!`, 'shield');
-
-        updateUI();
-        highlightMoveRange();
+        showFloatingText('+6 ЩИТ', selectedUnit.mesh.position, '#00ffcc');
+        updateUI(); highlightMoveRange();
         isAnimating = false;
     } else {
-        // ⚡ КИБЕР-ИМПУЛЬС ЯКУБА
-        const nearbyEnemy = units.find(u => u.isEnemy && (Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ)) <= 2);
-
-        if (!nearbyEnemy) {
-            addLog('Враг слишком далеко! Подойдите ближе (радиус 2 клетки).', 'enemy');
-            return;
-        }
-
+        const enemy = units.find(u => u.isEnemy && Math.abs(u.gridX - selectedUnit.gridX) + Math.abs(u.gridZ - selectedUnit.gridZ) <= 2);
+        if (!enemy) return;
         isAnimating = true;
         selectedUnit.ap -= 2;
-        const damage = Math.floor(Math.random() * 3) + 6;
-
-        await selectedUnit.animateCyberPulse();
-        spawnCyberPulseVFX(nearbyEnemy.mesh.position);
-        showFloatingText(`ОГЛУШЕНИЕ! -${damage}`, nearbyEnemy.mesh.position, '#00ccff');
-        
-        nearbyEnemy.isStunned = true;
-        nearbyEnemy.ap = 0;
-        addLog(`КИБЕР-ИМПУЛЬС! ${nearbyEnemy.name} ОГЛУШЕНА (-${damage} HP)!`, 'ability');
-        await nearbyEnemy.takeDamage(damage);
-
-        updateUI();
-        highlightMoveRange();
+        spawnCyberPulseVFX(enemy.mesh.position);
+        enemy.isStunned = true; enemy.ap = 0;
+        showFloatingText('ОГЛУШЕН', enemy.mesh.position, '#00ccff');
+        await enemy.takeDamage(5);
+        updateUI(); highlightMoveRange();
         isAnimating = false;
     }
 });
 
 async function runEnemyAI() {
     if (!isGameStarted || isGameOver || isAnimating) return;
-
     isEnemyTurn = true;
-    cancelPendingAction();
-    closeTargetPanel();
-    document.getElementById('turn-display').innerText = 'ХОД ВРАГА';
-    document.getElementById('turn-display').style.color = '#ff5964';
+    cancelPendingAction(); closeTargetPanel();
+    document.getElementById('turn-display').innerText = 'ВРАГ';
     document.getElementById('end-turn-btn').disabled = true;
 
-    const playerUnit = units.find(u => !u.isEnemy);
+    const player = units.find(u => !u.isEnemy);
     const enemies = units.filter(u => u.isEnemy);
 
-    for (let enemyUnit of enemies) {
-        if (enemyUnit.hp <= 0 || isGameOver) continue;
+    for (let enemy of enemies) {
+        if (enemy.hp <= 0 || isGameOver) continue;
+        if (enemy.isStunned) { enemy.isStunned = false; await new Promise(r => setTimeout(r, 600)); continue; }
+        enemy.ap = enemy.maxAp;
 
-        if (enemyUnit.isStunned) {
-            addLog(`${enemyUnit.name} ОГЛУШЕНА и пропускает ход!`, 'enemy');
-            showFloatingText('ПРОПУСК', enemyUnit.mesh.position, '#00ccff');
-            enemyUnit.isStunned = false;
-            await new Promise(r => setTimeout(r, 1000));
-            continue;
-        }
-
-        enemyUnit.ap = enemyUnit.maxAp;
-
-        while (enemyUnit.ap > 0 && playerUnit && playerUnit.hp > 0 && !isGameOver) {
-            await new Promise(r => setTimeout(r, 400));
-
-            const distToPlayer = Math.abs(enemyUnit.gridX - playerUnit.gridX) + Math.abs(enemyUnit.gridZ - playerUnit.gridZ);
-            const blocked = isLineBlockedByCover(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ);
-            
-            const detectLimit = enemyUnit.hasSpottedPlayer ? 12 : 8;
-            const hasVision = !blocked && distToPlayer <= detectLimit;
+        while (enemy.ap > 0 && player && player.hp > 0 && !isGameOver) {
+            await new Promise(r => setTimeout(r, 300));
+            const dist = Math.abs(enemy.gridX - player.gridX) + Math.abs(enemy.gridZ - player.gridZ);
+            const blocked = isLineBlockedByCover(enemy.gridX, enemy.gridZ, player.gridX, player.gridZ);
+            const hasVision = !blocked && dist <= 8;
 
             if (hasVision) {
-                if (!enemyUnit.hasSpottedPlayer) {
-                    addLog(`ТРЕВОГА! ${enemyUnit.name} заметила ${playerUnit.name}!`, 'enemy');
-                    showFloatingText('ВРАГ ЗАМЕЧЕН!', enemyUnit.mesh.position, '#ff3333');
-                    enemyUnit.hasSpottedPlayer = true;
-                }
-                enemyUnit.lastKnownPos = { x: playerUnit.gridX, z: playerUnit.gridZ };
-                enemyUnit.patrolTarget = null;
-            }
-
-            if (hasVision) {
-                // ИИ Рева тоже может включить свой щит, если её здоровье падает или она под огнем!
-                if (enemyUnit.name === 'Рева' && enemyUnit.shield === 0 && enemyUnit.hp <= 10 && enemyUnit.ap >= 2) {
-                    enemyUnit.ap -= 2;
-                    enemyUnit.shield = enemyUnit.maxShield;
-                    spawnShieldVFX(enemyUnit.mesh);
-                    showFloatingText('+6 ЩИТ!', enemyUnit.mesh.position, '#00ffcc');
-                    addLog(`${enemyUnit.name.toUpperCase()} АКТИВИРУЕТ ЩИТ-ПРОТОКОЛ!`, 'enemy');
-                    await new Promise(r => setTimeout(r, 400));
-                    continue;
-                }
-
-                if (distToPlayer === 1 && enemyUnit.ap >= 2) {
-                    enemyUnit.ap -= 2;
-                    const damage = Math.floor(Math.random() * 3) + 4;
-
-                    await enemyUnit.animateMeleeLunge(playerUnit.mesh.position);
-                    spawnMeleeVFX(enemyUnit.mesh.position, playerUnit.mesh.position);
-                    showFloatingText(`УДАР! -${damage}`, playerUnit.mesh.position, '#ff5964');
-                    addLog(`${enemyUnit.name.toUpperCase()} НАНОСИТ УДАР ВПЛОТНУЮ! ${playerUnit.name} получил ${damage} урона!`, 'enemy');
-                    await playerUnit.takeDamage(damage);
-                }
-                else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
-                    enemyUnit.ap -= 2;
-                    const calc = calculateHitChance(enemyUnit, playerUnit);
-                    const roll = Math.floor(Math.random() * 100);
-                    const isHit = roll < calc.chance;
-
-                    await enemyUnit.animateRecoil(playerUnit.mesh.position);
-                    spawnTracer(enemyUnit.mesh.position, playerUnit.mesh.position, isHit);
-
-                    if (isHit) {
-                        const damage = Math.floor(Math.random() * 3) + 3;
-                        showFloatingText(`-${damage}`, playerUnit.mesh.position, '#ff3333');
-                        addLog(`${enemyUnit.name.toUpperCase()} СТРЕЛЯЕТ! Попадание по ${playerUnit.name} (-${damage} HP)!`, 'enemy');
-                        await playerUnit.takeDamage(damage);
-                    } else {
-                        showFloatingText('ПРОМАХ!', playerUnit.mesh.position, '#ffcc00');
-                        addLog(`${enemyUnit.name} выстрелила и промахнулась!`, 'player');
-                    }
-                }
-                else if (enemyUnit.ap >= 1) {
-                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ, enemyUnit, true);
-                    if (path && path.length > 0) {
-                        await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-            else {
-                if (enemyUnit.lastKnownPos) {
-                    if (enemyUnit.gridX === enemyUnit.lastKnownPos.x && enemyUnit.gridZ === enemyUnit.lastKnownPos.z) {
-                        addLog(`${enemyUnit.name} обыскала точку [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}] — цели нет!`, 'enemy');
-                        enemyUnit.lastKnownPos = null;
-                        enemyUnit.hasSpottedPlayer = false;
-                    } else {
-                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.lastKnownPos.x, enemyUnit.lastKnownPos.z, enemyUnit, true);
-                        if (path && path.length > 0) {
-                            addLog(`${enemyUnit.name} идет к последней позиции цели [${enemyUnit.lastKnownPos.x}, ${enemyUnit.lastKnownPos.z}]...`, 'enemy');
-                            await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
-                        } else {
-                            enemyUnit.lastKnownPos = null;
-                        }
-                    }
-                }
-                else {
-                    if (!enemyUnit.patrolTarget || (enemyUnit.gridX === enemyUnit.patrolTarget.x && enemyUnit.gridZ === enemyUnit.patrolTarget.z)) {
-                        enemyUnit.patrolTarget = getNewPatrolTarget(enemyUnit);
-                    }
-
-                    if (enemyUnit.patrolTarget) {
-                        const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, enemyUnit.patrolTarget.x, enemyUnit.patrolTarget.z, enemyUnit, false);
-                        if (path && path.length > 0) {
-                            addLog(`${enemyUnit.name} патрулирует сектор [${path[0].x}, ${path[0].z}]...`, 'enemy');
-                            await enemyUnit.animateMoveToStep(path[0].x, path[0].z);
-                        } else {
-                            enemyUnit.patrolTarget = null;
-                        }
-                    } else {
-                        break;
-                    }
-                }
+                if (dist === 1 && enemy.ap >= 2) {
+                    enemy.ap -= 2;
+                    await enemy.animateMeleeLunge(player.mesh.position);
+                    spawnMeleeVFX(enemy.mesh.position, player.mesh.position);
+                    await player.takeDamage(4);
+                } else if (dist <= MAX_SHOOT_RANGE && enemy.ap >= 2) {
+                    enemy.ap -= 2;
+                    const isHit = Math.random() * 100 < 60;
+                    spawnTracer(enemy.mesh.position, player.mesh.position, isHit);
+                    if (isHit) await player.takeDamage(3);
+                } else if (enemy.ap >= 1) {
+                    const path = findPath(enemy.gridX, enemy.gridZ, player.gridX, player.gridZ, enemy, true);
+                    if (path && path.length > 0) await enemy.animateMoveToStep(path[0].x, path[0].z);
+                    else break;
+                } else break;
+            } else {
+                const target = getNewPatrolTarget(enemy);
+                if (target) {
+                    const path = findPath(enemy.gridX, enemy.gridZ, target.x, target.z, enemy, false);
+                    if (path && path.length > 0) await enemy.animateMoveToStep(path[0].x, path[0].z);
+                } else break;
             }
         }
     }
 
     if (!isGameOver) {
         isEnemyTurn = false;
-        document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
-        document.getElementById('turn-display').style.color = '#ff9d00';
+        document.getElementById('turn-display').innerText = 'ИГРОК';
         document.getElementById('end-turn-btn').disabled = false;
-
         if (selectedUnit) selectedUnit.ap = selectedUnit.maxAp;
-        updateUI();
-        highlightMoveRange();
-        addLog('Ваш ход! AP восстановлены.', 'player');
+        updateUI(); highlightMoveRange();
     }
 }
 
-Unit.prototype.animateMoveToStep = async function(stepX, stepZ) {
-    isAnimating = true;
+Unit.prototype.animateMoveToStep = async function(x, z) {
     this.ap -= 1;
-
     const startPos = this.mesh.position.clone();
-    const endPos = new THREE.Vector3(stepX * TILE_SIZE, 0, stepZ * TILE_SIZE);
-
-    const dx = stepX * TILE_SIZE - startPos.x;
-    const dz = stepZ * TILE_SIZE - startPos.z;
-    this.mesh.rotation.y = Math.atan2(dx, dz);
-
+    const endPos = new THREE.Vector3(x * TILE_SIZE, 0, z * TILE_SIZE);
+    this.mesh.rotation.y = Math.atan2(endPos.x - startPos.x, endPos.z - startPos.z);
     sounds.playStep();
 
-    const duration = 200;
     const startTime = performance.now();
-
-    await new Promise(resolve => {
-        const animateStep = (now) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            this.mesh.position.lerpVectors(startPos, endPos, progress);
-            this.mesh.position.y = Math.sin(progress * Math.PI) * 0.22;
-
-            if (progress < 1) {
-                requestAnimationFrame(animateStep);
-            } else {
-                this.mesh.position.y = 0;
-                resolve();
-            }
+    await new Promise(r => {
+        const anim = (now) => {
+            const p = Math.min((now - startTime) / 180, 1);
+            this.mesh.position.lerpVectors(startPos, endPos, p);
+            if (p < 1) requestAnimationFrame(anim);
+            else r();
         };
-        requestAnimationFrame(animateStep);
+        requestAnimationFrame(anim);
     });
-
-    this.gridX = stepX;
-    this.gridZ = stepZ;
-
-    updateUI();
-    highlightMoveRange();
-    isAnimating = false;
+    this.gridX = x; this.gridZ = z;
+    updateUI(); highlightMoveRange();
 };
 
 document.getElementById('end-turn-btn').addEventListener('click', () => {
@@ -1989,45 +1325,14 @@ document.getElementById('end-turn-btn').addEventListener('click', () => {
     if (isGameStarted && !isEnemyTurn && !isGameOver && !isAnimating) runEnemyAI();
 });
 
-window.addEventListener('keydown', (e) => {
-    if (!isGameStarted || isEnemyTurn || isGameOver || isAnimating) return;
-
-    if (e.key === 'Enter') {
-        if (pendingMoveTile) executeConfirmedMove();
-        else if (currentTarget) document.getElementById('shoot-btn').click();
-    }
-    if (e.key === 'Escape') {
-        cancelPendingAction();
-        closeTargetPanel();
-    }
-    if (e.key === '1') document.getElementById('melee-btn').click();
-    if (e.key === '2') document.getElementById('ability-btn').click();
-    if (e.code === 'Space') document.getElementById('end-turn-btn').click();
-});
-
 function triggerGameOver(isVictory) {
     isGameOver = true;
     sounds.stopBattleMusic();
-
-    closeTargetPanel();
-    cancelPendingAction();
-
+    closeTargetPanel(); cancelPendingAction();
     const modal = document.getElementById('game-over-modal');
-    const title = document.getElementById('modal-title');
-    const msg = document.getElementById('modal-msg');
-
-    if (isVictory) {
-        sounds.playVictory();
-        title.innerText = 'ПОБЕДА!';
-        title.style.color = '#00ff66';
-        msg.innerText = 'Противник повержен! Сектор под вашим контролем.';
-    } else {
-        sounds.playDefeat();
-        title.innerText = 'ПОРАЖЕНИЕ';
-        title.style.color = '#ff3333';
-        msg.innerText = 'Ваш оператор пал в бою... Миссия провалена.';
-    }
-
+    document.getElementById('modal-title').innerText = isVictory ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
+    document.getElementById('modal-title').style.color = isVictory ? '#00ff66' : '#ff3333';
+    document.getElementById('modal-msg').innerText = isVictory ? 'Враг зачищен.' : 'Оператор пал...';
     modal.style.display = 'flex';
 }
 
@@ -2036,17 +1341,8 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('game-over-modal').style.display = 'none';
     document.getElementById('hud-top').style.display = 'none';
     document.getElementById('action-deck').style.display = 'none';
-    document.getElementById('log-box').style.display = 'none';
-
-    isGameOver = false;
-    isEnemyTurn = false;
-    isAnimating = false;
-    isGameStarted = false;
-
-    document.getElementById('menu-char-select').style.display = 'none';
-    document.getElementById('menu-primary').style.display = 'block';
+    isGameStarted = false; isGameOver = false; isEnemyTurn = false;
     document.getElementById('main-menu').style.display = 'flex';
-
     sounds.startMenuMusic();
 });
 
@@ -2056,17 +1352,13 @@ function highlightMoveRange() {
             gridTiles[x][z].material.color.setHex(gridTiles[x][z].userData.defaultColor);
         }
     }
-
     if (!isGameStarted || !selectedUnit || selectedUnit.ap <= 0 || isEnemyTurn || isGameOver) return;
 
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
             if (x === selectedUnit.gridX && z === selectedUnit.gridZ) continue;
-
             const path = findPath(selectedUnit.gridX, selectedUnit.gridZ, x, z, selectedUnit, false);
-            if (path && path.length <= selectedUnit.ap) {
-                gridTiles[x][z].material.color.setHex(0x1e4a2c);
-            }
+            if (path && path.length <= selectedUnit.ap) gridTiles[x][z].material.color.setHex(0x1e4a2c);
         }
     }
 }
@@ -2074,24 +1366,9 @@ function highlightMoveRange() {
 function updateUI() {
     if (selectedUnit) {
         document.getElementById('unit-name').innerText = selectedUnit.name;
-        document.getElementById('unit-class').innerText = selectedUnit.className;
-        
-        let hpString = `${selectedUnit.hp}/${selectedUnit.maxHp}`;
-        if (selectedUnit.shield > 0) {
-            hpString += ` (+${selectedUnit.shield} Щит)`;
-        }
-        document.getElementById('unit-hp-text').innerText = hpString;
-        
-        const hpPercent = Math.max(0, (selectedUnit.hp / selectedUnit.maxHp) * 100);
-        document.getElementById('unit-hp-bar').style.width = `${hpPercent}%`;
-
-        const shieldBar = document.getElementById('unit-shield-bar');
-        if (selectedUnit.shield > 0) {
-            const shieldPercent = Math.min(100, (selectedUnit.shield / selectedUnit.maxShield) * 100);
-            shieldBar.style.width = `${shieldPercent}%`;
-        } else {
-            shieldBar.style.width = '0%';
-        }
+        document.getElementById('unit-hp-text').innerText = `${selectedUnit.hp}/${selectedUnit.maxHp}` + (selectedUnit.shield > 0 ? ` (+${selectedUnit.shield})` : '');
+        document.getElementById('unit-hp-bar').style.width = `${(selectedUnit.hp / selectedUnit.maxHp) * 100}%`;
+        document.getElementById('unit-shield-bar').style.width = selectedUnit.shield > 0 ? `${(selectedUnit.shield / selectedUnit.maxShield) * 100}%` : '0%';
 
         const apContainer = document.getElementById('ap-dots-container');
         apContainer.innerHTML = '';
@@ -2100,19 +1377,9 @@ function updateUI() {
             dot.className = `ap-dot ${i < selectedUnit.ap ? '' : 'empty'}`;
             apContainer.appendChild(dot);
         }
-
-        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2 || isAnimating;
-        document.getElementById('ability-btn').disabled = selectedUnit.ap < 2 || isAnimating;
+        document.getElementById('melee-btn').disabled = selectedUnit.ap < 2;
+        document.getElementById('ability-btn').disabled = selectedUnit.ap < 2;
     }
-}
-
-function addLog(text, type = '') {
-    const logBox = document.getElementById('log-box');
-    const entry = document.createElement('div');
-    entry.className = `log-entry ${type}`;
-    entry.innerText = `> ${text}`;
-    logBox.appendChild(entry);
-    logBox.scrollTop = logBox.scrollHeight;
 }
 
 window.addEventListener('resize', () => {
@@ -2123,13 +1390,6 @@ window.addEventListener('resize', () => {
 
 function animate() {
     requestAnimationFrame(animate);
-
-    animatedBeacons.forEach(b => {
-        b.angle += 0.04;
-        b.target.position.x = Math.cos(b.angle) * 3;
-        b.target.position.z = Math.sin(b.angle) * 3;
-    });
-
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
