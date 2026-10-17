@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HYNMOTA: Stealth & Patrol AI Tactics 3D</title>
+    <title>HYNMOTA: Tactical Main Menu & Selection 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -19,6 +19,43 @@
             padding: 20px; z-index: 9999; display: none; overflow: auto; font-size: 12px;
         }
 
+        /* ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ПЕРСОНАЖА ---------------- */
+        #main-menu {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500;
+            background: rgba(8, 5, 3, 0.95); backdrop-filter: blur(12px);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .menu-box {
+            background: rgba(18, 13, 8, 0.96); border: 2px solid #8b6d43; border-top: 4px solid #ff9d00;
+            border-radius: 8px; padding: 35px 45px; text-align: center;
+            box-shadow: 0 0 45px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 157, 0, 0.15);
+            max-width: 92vw; width: 420px;
+        }
+        .menu-title { font-size: 42px; margin: 0; color: #ff9d00; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 15px rgba(255,157,0,0.4); }
+        .menu-subtitle { font-size: 12px; color: #8b6d43; letter-spacing: 3px; font-weight: bold; margin-top: 4px; text-transform: uppercase; }
+        .menu-divider { height: 1px; background: linear-gradient(90deg, transparent, #8b6d43, transparent); margin: 25px 0; }
+        .btn-menu-primary {
+            background: linear-gradient(180deg, #d4a359 0%, #8b6d43 100%);
+            border: 1px solid #ffd89b; color: #120e0a; font-size: 16px; font-weight: bold;
+            width: 100%; padding: 16px; cursor: pointer; border-radius: 4px; text-transform: uppercase;
+            letter-spacing: 2px; box-shadow: 0 6px 20px rgba(0,0,0,0.8); transition: all 0.2s ease;
+        }
+        .btn-menu-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(255, 157, 0, 0.5); color: #fff; }
+
+        /* КАРТОЧКИ ВЫБОРА ПЕРСОНАЖА */
+        .char-cards-container { display: flex; gap: 16px; justify-content: center; margin-top: 15px; }
+        .char-card {
+            flex: 1; background: rgba(12, 9, 6, 0.92); border: 1px solid #554228; border-radius: 6px;
+            padding: 18px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        .char-card:hover { border-color: #ff9d00; transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
+        .char-card-header { font-size: 20px; font-weight: bold; color: #ff9d00; letter-spacing: 1px; }
+        .char-card-class { font-size: 11px; color: #8b6d43; text-transform: uppercase; margin-bottom: 12px; }
+        .char-card-stats { font-size: 11px; color: #d4a359; line-height: 1.6; margin-bottom: 16px; }
+        .char-card-stats span { color: #888; }
+
+        /* МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" */
         #game-over-modal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
             background: rgba(8, 5, 3, 0.94); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center;
@@ -37,6 +74,7 @@
         }
         .btn-restart:active { transform: translateY(2px); }
 
+        /* ВЕРХНИЙ HUD */
         #hud-top {
             position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
             pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
@@ -146,11 +184,61 @@
     <div id="canvas-container"></div>
     <div id="floating-text-container"></div>
 
+    <!-- ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ОПЕРАТОРА ---------------- -->
+    <div id="main-menu">
+        <!-- ЭКРАН 1: СТАРТОВОЕ МЕНЮ -->
+        <div id="menu-primary" class="menu-box">
+            <h1 class="menu-title">HYNMOTA</h1>
+            <div class="menu-subtitle">DESERT PUNK TACTICS</div>
+            <div class="menu-divider"></div>
+            <button class="btn-menu-primary" id="btn-start-game">ИГРАТЬ</button>
+        </div>
+
+        <!-- ЭКРАН 2: ВЫБОР ПЕРСОНАЖА -->
+        <div id="menu-char-select" class="menu-box" style="display: none; width: 660px; max-width: 95vw;">
+            <div class="menu-subtitle" style="font-size: 16px; color: #ff9d00;">ВЫБОР ОПЕРАТОРА</div>
+            <p style="font-size: 11px; color: #a89474; margin: 8px 0 16px 0;">Выберите вашего персонажа. Второй оператор перейдет под управление ИИ.</p>
+            
+            <div class="char-cards-container">
+                <!-- Карточка Якуба -->
+                <div class="char-card">
+                    <div>
+                        <div class="char-card-header">ЯКУБ</div>
+                        <div class="char-card-class">Штурмовик</div>
+                        <div class="char-card-stats">
+                            <div><span>Здоровье:</span> <b>12 HP</b></div>
+                            <div><span>Очки действий:</span> <b>4 AP</b></div>
+                            <div><span>Специфика:</span> Ближний бой и штурм</div>
+                        </div>
+                    </div>
+                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="yakub">ВЫБРАТЬ</button>
+                </div>
+
+                <!-- Карточка Ревы -->
+                <div class="char-card">
+                    <div>
+                        <div class="char-card-header" style="color: #00ff66;">РЕВА</div>
+                        <div class="char-card-class">Техно-Специалист</div>
+                        <div class="char-card-stats">
+                            <div><span>Здоровье:</span> <b>16 HP</b></div>
+                            <div><span>Очки действий:</span> <b>4 AP</b></div>
+                            <div><span>Специфика:</span> Защита и высока выживаемость</div>
+                        </div>
+                    </div>
+                    <button class="btn-act btn-confirm-theme btn-select-char" data-char="reva">ВЫБРАТЬ</button>
+                </div>
+            </div>
+
+            <button class="btn-act btn-cancel-theme" id="btn-back-to-primary" style="margin-top: 20px; width: 100%; justify-content: center;">НАЗАД В МЕНЮ</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО "КОНЕЦ ИГРЫ" -->
     <div id="game-over-modal">
         <div class="modal-box">
             <h1 id="modal-title">ПОРАЖЕНИЕ</h1>
-            <p id="modal-msg">Якуб пал в бою против Ревы.</p>
-            <button class="btn-restart" id="restart-btn">НАЧАТЬ ЗАНОВО</button>
+            <p id="modal-msg">Оператор пал в бою.</p>
+            <button class="btn-restart" id="restart-btn">ГЛАВНОЕ МЕНЮ</button>
         </div>
     </div>
 
@@ -201,8 +289,8 @@
     </div>
 
     <div id="log-box">
-        <div class="log-entry">ИИ переведен в режим патрулирования и поиска.</div>
-        <div class="log-entry">Враг не знает ваши точные координаты, пока не заметит вас!</div>
+        <div class="log-entry">Тактический интерфейс запущен.</div>
+        <div class="log-entry">Ожидание выбора оператора в Главном меню...</div>
     </div>
 
     <div id="action-deck">
@@ -660,6 +748,7 @@ let currentTarget = null;
 let isEnemyTurn = false;
 let isGameOver = false;
 let isAnimating = false;
+let isGameStarted = false; // ФЛАГ ЗАПУСКА ИГРЫ
 let pendingMoveTile = null;
 
 function findPath(startX, startZ, targetX, targetZ, movingUnit) {
@@ -704,7 +793,6 @@ function findPath(startX, startZ, targetX, targetZ, movingUnit) {
     return null;
 }
 
-// 🎯 ВЫБОР СЛУЧАЙНОЙ ПАТРУЛЬНОЙ ЦЕЛИ ДЛЯ ИИ
 function getNewPatrolTarget(unit) {
     const validTiles = [];
     for (let x = 0; x < GRID_SIZE; x++) {
@@ -786,7 +874,6 @@ class Unit {
         this.isEnemy = isEnemy;
         this.isStunned = false;
 
-        // ПАРАМЕТРЫ СТЕЛСА И ПОИСКА ДЛЯ ИИ
         this.lastKnownPos = null;
         this.patrolTarget = null;
         this.hasSpottedPlayer = false;
@@ -981,9 +1068,9 @@ class Unit {
             closeTargetPanel();
             cancelPendingAction();
 
-            if (this.name === 'Якуб') {
+            if (!this.isEnemy) {
                 triggerGameOver(false);
-            } else if (this.name === 'Рева') {
+            } else {
                 triggerGameOver(true);
             }
         }
@@ -1004,11 +1091,9 @@ class Unit {
     }
 }
 
+// СОЗДАНИЕ ПЕРСОНАЖЕЙ
 const yakub = new Unit('Якуб', 'Штурмовик', 1, 1, 12, 4, false, 0xff0033, 0x3d3226);
 const reva = new Unit('Рева', 'Техно-Специалист', 7, 7, 16, 4, true, 0x00ff66, 0x223322);
-
-units.push(yakub, reva);
-selectedUnit = yakub;
 
 function loadModelSafely(unitObj, modelPath, visorColor) {
     if (typeof THREE.GLTFLoader === 'undefined') return;
@@ -1040,8 +1125,6 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                 const vLight = new THREE.PointLight(visorColor, 3, 3);
                 vLight.position.set(0, headY, 0.3);
                 unitObj.mesh.add(vLight);
-
-                addLog(`Файл ${modelPath} подключен!`, 'player');
             } catch (err) { console.error(err); }
         },
         null,
@@ -1052,11 +1135,66 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
 loadModelSafely(yakub, './models/yakub.glb', 0xff0033);
 loadModelSafely(reva, './models/reva.glb', 0x00ff66);
 
+// ---------------- ЛОГИКА ГЛАВНОГО МЕНЮ И ВЫБОРА ПЕРСОНАЖА ----------------
+document.getElementById('btn-start-game').addEventListener('click', () => {
+    sounds.playClick();
+    document.getElementById('menu-primary').style.display = 'none';
+    document.getElementById('menu-char-select').style.display = 'block';
+});
+
+document.getElementById('btn-back-to-primary').addEventListener('click', () => {
+    sounds.playClick();
+    document.getElementById('menu-char-select').style.display = 'none';
+    document.getElementById('menu-primary').style.display = 'block';
+});
+
+document.querySelectorAll('.btn-select-char').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        sounds.playClick();
+        const chosenChar = e.target.getAttribute('data-char');
+
+        units = [];
+        if (chosenChar === 'yakub') {
+            yakub.isEnemy = false;
+            yakub.startX = 1; yakub.startZ = 1;
+            reva.isEnemy = true;
+            reva.startX = 7; reva.startZ = 7;
+
+            selectedUnit = yakub;
+            units.push(yakub, reva);
+        } else {
+            reva.isEnemy = false;
+            reva.startX = 1; reva.startZ = 1;
+            yakub.isEnemy = true;
+            yakub.startX = 7; yakub.startZ = 7;
+
+            selectedUnit = reva;
+            units.push(reva, yakub);
+        }
+
+        yakub.resetUnit();
+        reva.resetUnit();
+
+        document.getElementById('main-menu').style.display = 'none';
+        isGameStarted = true;
+        isGameOver = false;
+        isEnemyTurn = false;
+
+        document.getElementById('turn-display').innerText = 'ХОД ИГРОКА';
+        document.getElementById('turn-display').style.color = '#ff9d00';
+        document.getElementById('end-turn-btn').disabled = false;
+
+        updateUI();
+        highlightMoveRange();
+        addLog(`--- БОЙ НАЧАТ. ВАШ ОПЕРАТОР: ${selectedUnit.name.toUpperCase()} ---`, 'player');
+    });
+});
+
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 function onPointerDown(event) {
-    if (isEnemyTurn || isGameOver || isAnimating) return;
+    if (!isGameStarted || isEnemyTurn || isGameOver || isAnimating) return;
     if (event.target !== renderer.domElement) return;
 
     if (event.button === 2) {
@@ -1147,7 +1285,7 @@ function openTargetPanel(target) {
         document.getElementById('hit-chance').style.color = '#ff5964';
         shootBtn.disabled = true;
     } else {
-        document.getElementById('hit-chance').innerText = `Шанс: ${calc.chance}% (Дист: ${calc.distance} кл.)`;
+        document.getElementById('hit-chance').innerText = `Шанс: ${calc.chance}\% (Дист: ${calc.distance} кл.)`;
         document.getElementById('hit-chance').style.color = '#00ff66';
         shootBtn.disabled = false;
     }
@@ -1175,7 +1313,7 @@ document.getElementById('target-cancel-btn').addEventListener('click', () => {
 
 document.getElementById('shoot-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || !currentTarget || isEnemyTurn || isGameOver || isAnimating) return;
+    if (!isGameStarted || !selectedUnit || !currentTarget || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP! (Нужно 2 AP)', 'enemy');
@@ -1219,7 +1357,7 @@ document.getElementById('shoot-btn').addEventListener('click', async () => {
 
 document.getElementById('melee-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
+    if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP для ближнего боя! (Нужно 2 AP)', 'enemy');
@@ -1251,7 +1389,7 @@ document.getElementById('melee-btn').addEventListener('click', async () => {
 
 document.getElementById('cyber-pulse-btn').addEventListener('click', async () => {
     sounds.playClick();
-    if (!selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
+    if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
 
     if (selectedUnit.ap < 2) {
         addLog('Недостаточно AP для Кибер-импульса!', 'enemy');
@@ -1283,9 +1421,8 @@ document.getElementById('cyber-pulse-btn').addEventListener('click', async () =>
     isAnimating = false;
 });
 
-// 🤖 АЛГОРИТМ ИИ: ПАТРУЛИРОВАНИЕ, ПОИСК И АТАКА
 async function runEnemyAI() {
-    if (isGameOver || isAnimating) return;
+    if (!isGameStarted || isGameOver || isAnimating) return;
 
     isEnemyTurn = true;
     cancelPendingAction();
@@ -1294,6 +1431,7 @@ async function runEnemyAI() {
     document.getElementById('turn-display').style.color = '#ff5964';
     document.getElementById('end-turn-btn').disabled = true;
 
+    const playerUnit = units.find(u => !u.isEnemy);
     const enemies = units.filter(u => u.isEnemy);
 
     for (let enemyUnit of enemies) {
@@ -1309,76 +1447,49 @@ async function runEnemyAI() {
 
         enemyUnit.ap = enemyUnit.maxAp;
 
-        while (enemyUnit.ap > 0 && yakub.hp > 0 && !isGameOver) {
+        while (enemyUnit.ap > 0 && playerUnit && playerUnit.hp > 0 && !isGameOver) {
             await new Promise(r => setTimeout(r, 400));
 
-            // 1. ПРОВЕРКА ПОЛЯ ЗРЕНИЯ И ДИСТАНЦИИ ОБНАРУЖЕНИЯ
-            const distToPlayer = Math.abs(enemyUnit.gridX - yakub.gridX) + Math.abs(enemyUnit.gridZ - yakub.gridZ);
-            const blocked = isLineBlockedByCover(enemyUnit.gridX, enemyUnit.gridZ, yakub.gridX, yakub.gridZ);
-            const hasVision = !blocked && distToPlayer <= 6; // Радиус обзора — 6 клеток
+            const distToPlayer = Math.abs(enemyUnit.gridX - playerUnit.gridX) + Math.abs(enemyUnit.gridZ - playerUnit.gridZ);
+            const blocked = isLineBlockedByCover(enemyUnit.gridX, enemyUnit.gridZ, playerUnit.gridX, playerUnit.gridZ);
+            const hasVision = !blocked && distToPlayer <= 6;
 
             if (hasVision) {
                 if (!enemyUnit.hasSpottedPlayer) {
-                    addLog(`ТРЕВОГА! ${enemyUnit.name} заметила Якуба!`, 'enemy');
+                    addLog(`ТРЕВОГА! ${enemyUnit.name} заметила ${playerUnit.name}!`, 'enemy');
                     showFloatingText('ВРАГ ЗАМЕЧЕН!', enemyUnit.mesh.position, '#ff3333');
                     enemyUnit.hasSpottedPlayer = true;
                 }
-                enemyUnit.lastKnownPos = { x: yakub.gridX, z: yakub.gridZ };
+                enemyUnit.lastKnownPos = { x: playerUnit.gridX, z: playerUnit.gridZ };
                 enemyUnit.patrolTarget = null;
             } else {
                 if (enemyUnit.hasSpottedPlayer && !enemyUnit.lastKnownPos) {
-                    addLog(`${enemyUnit.name} потеряла Якуба из виду! Начинает патрулирование...`, 'enemy');
+                    addLog(`${enemyUnit.name} потеряла ${playerUnit.name} из виду! Начинает патрулирование...`, 'enemy');
                     enemyUnit.hasSpottedPlayer = false;
                 }
             }
 
-            // 2. ПРИНЯТИЕ ТАКТИЧЕСКОГО РЕШЕНИЯ
             if (hasVision) {
-                // Удар в ближнем бою
                 if (distToPlayer === 1 && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     const damage = Math.floor(Math.random() * 3) + 4;
 
-                    await enemyUnit.animateMeleeLunge(yakub.mesh.position);
-                    spawnMeleeVFX(enemyUnit.mesh.position, yakub.mesh.position);
-                    showFloatingText(`УДАР! -${damage}`, yakub.mesh.position, '#ff5964');
-                    addLog(`РЕВА НАНОСИТ УДАР ВПЛОТНУЮ! Якуб получил ${damage} урона!`, 'enemy');
-                    await yakub.takeDamage(damage);
+                    await enemyUnit.animateMeleeLunge(playerUnit.mesh.position);
+                    spawnMeleeVFX(enemyUnit.mesh.position, playerUnit.mesh.position);
+                    showFloatingText(`УДАР! -${damage}`, playerUnit.mesh.position, '#ff5964');
+                    addLog(`${enemyUnit.name.toUpperCase()} НАНОСИТ УДАР ВПЛОТНУЮ! ${playerUnit.name} получил ${damage} урона!`, 'enemy');
+                    await playerUnit.takeDamage(damage);
                 }
-                // Дистанционный выстрел
                 else if (distToPlayer <= MAX_SHOOT_RANGE && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
-                    const calc = calculateHitChance(enemyUnit, yakub);
+                    const calc = calculateHitChance(enemyUnit, playerUnit);
                     const roll = Math.floor(Math.random() * 100);
                     const isHit = roll < calc.chance;
 
-                    await enemyUnit.animateRecoil(yakub.mesh.position);
-                    spawnTracer(enemyUnit.mesh.position, yakub.mesh.position, isHit);
+                    await enemyUnit.animateRecoil(playerUnit.mesh.position);
+                    spawnTracer(enemyUnit.mesh.position, playerUnit.mesh.position, isHit);
 
                     if (isHit) {
                         const damage = Math.floor(Math.random() * 3) + 3;
-                        showFloatingText(`-${damage}`, yakub.mesh.position, '#ff3333');
-                        addLog(`РЕВА СТРЕЛЯЕТ! Попадание по Якубу (-${damage} HP)!`, 'enemy');
-                        await yakub.takeDamage(damage);
-                    } else {
-                        showFloatingText('ПРОМАХ!', yakub.mesh.position, '#ffcc00');
-                        addLog(`Рева выстрелила и промахнулась!`, 'player');
-                    }
-                }
-                // Сближение с игроком для удобной позиции
-                else if (enemyUnit.ap >= 1) {
-                    const path = findPath(enemyUnit.gridX, enemyUnit.gridZ, yakub.gridX, yakub.gridZ, enemyUnit);
-                    if (path && path.length > 0) {
-                        await enemyUnit.animateMoveTo(path[0].x, path[0].z);
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-            // ПОИСК И ПАТРУЛИРОВАНИЕ (ВРАГ НЕ ВИДИТ ИГРОКА)
-            else {
-                // Вариант A: Проверка последней известной позиции
-                if (enemyUnit.lastKnownPos) {
-                    if (enemyUnit.
+                        showFloatingText(`-${damage}`, playerUnit.mesh.position, '#ff3333');
+                        addLog(`${enemyUnit.name.toUpperCase()} СТРЕЛЯЕТ
