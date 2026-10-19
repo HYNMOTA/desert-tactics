@@ -2799,7 +2799,7 @@ function animate() {
         pipCamera.lookAt(lookTarget);
         
         // Легкий тактический наклон (Dutch angle), чтобы добавить динамики
-        pipCamera.rotation.z = -0.03;
+        pipCamera.rotateZ(-0.03); // <--- ИСПРАВЛЕННАЯ СТРОКА
     }
     // ------------------------------------------------------------------
 
