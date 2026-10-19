@@ -1498,10 +1498,11 @@ class Unit {
         this.animationResolve = null;
         this.transitionPose = null;
         this.transitionTime = 0;
-        this.transitionDuration = 0.12;
+        this.transitionDuration = 0.25;
         this.poseTargets = {};
         this.poseEuler = new THREE.Euler();
         this.poseQuaternion = new THREE.Quaternion();
+        this.armLift = { left: 0, right: 0 };
 
         this.lastKnownPos = null;
         this.patrolTarget = null;
@@ -1534,11 +1535,52 @@ class Unit {
     bindSkeleton(model) {
         this.bones = {};
         this.restPose = {};
+
+        // Словарь-переводчик имен костей (Mixamo, Blender Rigify и др.)
+        const boneAliases = {
+            'pelvis': ['pelvis', 'hips', 'hip', 'mixamorighips'],
+            'spine_01': ['spine_01', 'spine', 'spine1', 'spine_1', 'mixamorigspine'],
+            'spine_02': ['spine_02', 'spine2', 'spine_2', 'chest', 'mixamorigspine1', 'mixamorigspine2'],
+            'head': ['head', 'mixamorighead'],
+            'upperarm_l': ['upperarm_l', 'shoulder_l', 'leftarm', 'leftshoulder', 'mixamorigleftarm', 'mixamorigleftshoulder'],
+            'upperarm_r': ['upperarm_r', 'shoulder_r', 'rightarm', 'rightshoulder', 'mixamorigrightarm', 'mixamorigrightshoulder'],
+            'lowerarm_l': ['lowerarm_l', 'elbow_l', 'leftforearm', 'mixamorigleftforearm'],
+            'lowerarm_r': ['lowerarm_r', 'elbow_r', 'rightforearm', 'mixamorigrightforearm'],
+            'hand_l': ['hand_l', 'lefthand', 'mixamoriglefthand'],
+            'hand_r': ['hand_r', 'righthand', 'mixamorigrighthand'],
+            'thigh_l': ['thigh_l', 'leg_l', 'leftupleg', 'mixamorigleftupleg'],
+            'thigh_r': ['thigh_r', 'leg_r', 'rightupleg', 'mixamorigrightupleg'],
+            'calf_l': ['calf_l', 'knee_l', 'leftleg', 'mixamorigleftleg'],
+            'calf_r': ['calf_r', 'knee_r', 'rightleg', 'mixamorigrightleg'],
+            'foot_l': ['foot_l', 'leftfoot', 'mixamorigleftfoot'],
+            'foot_r': ['foot_r', 'rightfoot', 'mixamorigrightfoot']
+        };
+
         model.traverse(node => {
             if (!node.isBone) return;
-            this.bones[node.name] = node;
-            this.restPose[node.name] = node.quaternion.clone();
+            
+            const nodeName = node.name.toLowerCase();
+            let mappedName = null;
+
+            for (const [key, aliases] of Object.entries(boneAliases)) {
+                if (aliases.some(alias => nodeName.includes(alias))) {
+                    mappedName = key;
+                    break;
+                }
+            }
+
+            const finalName = mappedName || node.name;
+
+            if (!this.bones[finalName]) {
+                this.bones[finalName] = node;
+                this.restPose[finalName] = node.quaternion.clone();
+            }
         });
+
+        if (Object.keys(this.bones).length > 0) {
+            this.skeletalAnimationEnabled = true; 
+        }
+        
         this.restoreSkeletonPose();
     }
 
