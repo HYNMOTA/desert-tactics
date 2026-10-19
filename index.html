@@ -111,6 +111,28 @@
         .ap-dot { width: 12px; height: 12px; border-radius: 2px; background: #2b7a3e; border: 1px solid #57d473; box-shadow: 0 0 6px rgba(0,255,102,0.4); }
         .ap-dot.empty { background: #1a221b; border-color: #334435; box-shadow: none; }
 
+        /* КАМЕРА ОТ ТРЕТЬЕГО ЛИЦА (PIP) */
+        #pip-container {
+            position: absolute; top: 95px; right: 16px; z-index: 10;
+            width: 320px; height: 240px;
+            border: 2px solid #554228; border-top: 4px solid #ff3333; border-radius: 4px;
+            background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: none; pointer-events: none; overflow: hidden;
+        }
+        .pip-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            box-shadow: inset 0 0 35px rgba(0,0,0,0.9);
+            z-index: 2; pointer-events: none;
+        }
+        .pip-text {
+            position: absolute; top: 8px; left: 10px; color: #ff3333;
+            font-size: 10px; font-weight: bold; z-index: 3; letter-spacing: 1px;
+            text-shadow: 0 0 5px #ff3333; animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
         #target-panel {
             position: absolute; bottom: 95px; right: 20px; z-index: 10;
             display: none; background: rgba(18, 10, 8, 0.94); backdrop-filter: blur(8px); border: 1px solid #ff3333;
@@ -287,17 +309,6 @@
             box-shadow: 3px 3px 0 var(--blood);
             background: var(--paper);
             color: var(--ink);
-        }
-        .music-toggle-btn {
-            position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 2;
-            border: 1px solid var(--acid);
-            border-radius: 1px;
-            background: var(--ink);
-            color: var(--acid);
-            font: 600 10px var(--utility-font);
         }
         .char-cards-container { gap: 10px; margin-top: 22px; }
         .char-card {
@@ -497,6 +508,10 @@
             .cost-badge { display: none; }
             .deck-frame > div[style*="width: 1px"] { display: none; }
             #log-box { left: 8px; bottom: 72px; width: min(190px, 48vw); max-height: 76px; font-size: 8px; }
+
+            /* PIP Mobile */
+            #pip-container { width: 140px; height: 105px; top: 75px; right: 8px; }
+            .pip-text { font-size: 8px; top: 4px; left: 6px; }
         }
         @media (max-width: 390px) {
             .char-cards-container { flex-direction: column; }
@@ -519,6 +534,12 @@
     <div id="error-overlay"><h3>ОШИБКА ВЫПОЛНЕНИЯ:</h3></div>
     <div id="canvas-container"></div>
     <div id="floating-text-container"></div>
+
+    <!-- PIP ТАКТИЧЕСКАЯ КАМЕРА -->
+    <div id="pip-container">
+        <div class="pip-overlay"></div>
+        <div class="pip-text">● TACTICAL CAM</div>
+    </div>
 
     <!-- ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ОПЕРАТОРА ---------------- -->
     <div id="main-menu">
@@ -1082,6 +1103,14 @@ scene.fog = new THREE.FogExp2(0x302014, 0.018);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(10, 16, 20);
 
+// ИНИЦИАЛИЗАЦИЯ КАМЕРЫ PIP
+const pipCamera = new THREE.PerspectiveCamera(65, 320/240, 0.1, 100);
+pipCamera.position.set(0.7, 1.8, -2.5); // Вид из-за правого плеча
+pipCamera.rotation.set(0, Math.PI, 0); // Смотрит в сторону лица персонажа
+pipCamera.rotateY(0.1); // Слегка довернута к центру экрана
+pipCamera.rotateX(-0.1); // Чуть опущена вниз для тактического ракурса
+let pipEnabled = false;
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1536,7 +1565,6 @@ class Unit {
         this.bones = {};
         this.restPose = {};
 
-        // Словарь-переводчик имен костей (Mixamo, Blender Rigify и др.)
         const boneAliases = {
             'pelvis': ['pelvis', 'hips', 'hip', 'mixamorighips'],
             'spine_01': ['spine_01', 'spine', 'spine1', 'spine_1', 'mixamorigspine'],
@@ -2095,10 +2123,15 @@ document.querySelectorAll('.btn-select-char').forEach(btn => {
         yakub.resetUnit();
         reva.resetUnit();
 
+        // ПРИКРЕПЛЯЕМ КАМЕРУ К ВЫБРАННОМУ ОПЕРАТОРУ
+        selectedUnit.mesh.add(pipCamera);
+        pipEnabled = true;
+
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('hud-top').style.display = 'flex';
         document.getElementById('action-deck').style.display = 'flex';
         document.getElementById('log-box').style.display = 'block';
+        document.getElementById('pip-container').style.display = 'block';
 
         isGameStarted = true;
         isGameOver = false;
@@ -2331,7 +2364,6 @@ document.getElementById('melee-btn').addEventListener('click', async () => {
     isAnimating = false;
 });
 
-// КНОПКА СПЕЦИАЛЬНОЙ СПОСОБНОСТИ (ЯКУБ: Кибер-Импульс / РЕВА: Щит-Протокол)
 document.getElementById('ability-btn').addEventListener('click', async () => {
     sounds.playClick();
     if (!isGameStarted || !selectedUnit || isEnemyTurn || isGameOver || isAnimating) return;
@@ -2429,7 +2461,6 @@ async function runEnemyAI() {
             }
 
             if (hasVision) {
-                // ИИ Рева тоже может включить свой щит, если её здоровье падает или она под огнем!
                 if (enemyUnit.name === 'Рева' && enemyUnit.shield === 0 && enemyUnit.hp <= 10 && enemyUnit.ap >= 2) {
                     enemyUnit.ap -= 2;
                     enemyUnit.shield = enemyUnit.maxShield;
@@ -2597,6 +2628,8 @@ window.addEventListener('keydown', (e) => {
 
 function triggerGameOver(isVictory) {
     isGameOver = true;
+    pipEnabled = false;
+    document.getElementById('pip-container').style.display = 'none';
     sounds.stopBattleMusic();
 
     closeTargetPanel();
@@ -2627,6 +2660,9 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     document.getElementById('hud-top').style.display = 'none';
     document.getElementById('action-deck').style.display = 'none';
     document.getElementById('log-box').style.display = 'none';
+    
+    pipEnabled = false;
+    document.getElementById('pip-container').style.display = 'none';
 
     isGameOver = false;
     isEnemyTurn = false;
@@ -2725,7 +2761,31 @@ function animate() {
     });
 
     if (controls) controls.update();
-    renderer.render(scene, camera);
+
+    if (isGameStarted && pipEnabled) {
+        // Отрисовка основной сцены
+        renderer.setScissorTest(false);
+        renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+        renderer.render(scene, camera);
+
+        // Отрисовка PiP-камеры
+        const pipElem = document.getElementById('pip-container');
+        const rect = pipElem.getBoundingClientRect();
+        
+        // Перевод координат для WebGL (viewport считает от нижнего левого угла)
+        const bottom = window.innerHeight - rect.bottom;
+        
+        renderer.setScissorTest(true);
+        renderer.setScissor(rect.left, bottom, rect.width, rect.height);
+        renderer.setViewport(rect.left, bottom, rect.width, rect.height);
+        
+        renderer.render(scene, pipCamera);
+        
+        renderer.setScissorTest(false);
+    } else {
+        renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+        renderer.render(scene, camera);
+    }
 }
 const clock = new THREE.Clock();
 animate();
