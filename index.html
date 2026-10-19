@@ -1106,10 +1106,7 @@ camera.position.set(10, 16, 20);
 
 // ИНИЦИАЛИЗАЦИЯ КАМЕРЫ PIP
 const pipCamera = new THREE.PerspectiveCamera(65, 320/240, 0.1, 100);
-pipCamera.position.set(0.7, 1.8, -2.5); // Вид из-за правого плеча
-pipCamera.rotation.set(0, Math.PI, 0); // Смотрит в сторону лица персонажа
-pipCamera.rotateY(0.1); // Слегка довернута к центру экрана
-pipCamera.rotateX(-0.1); // Чуть опущена вниз для тактического ракурса
+// Позиция будет обновляться динамически в animate()
 let pipEnabled = false;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -2124,8 +2121,6 @@ document.querySelectorAll('.btn-select-char').forEach(btn => {
         yakub.resetUnit();
         reva.resetUnit();
 
-        // ПРИКРЕПЛЯЕМ КАМЕРУ К ВЫБРАННОМУ ОПЕРАТОРУ
-        selectedUnit.mesh.add(pipCamera);
         pipEnabled = true;
 
         document.getElementById('main-menu').style.display = 'none';
@@ -2763,6 +2758,51 @@ function animate() {
 
     if (controls) controls.update();
 
+    // ------ ДИНАМИЧЕСКАЯ ТАКТИЧЕСКАЯ КАМЕРА (ПРИВЯЗКА К СКЕЛЕТУ) ------
+    if (isGameStarted && pipEnabled && selectedUnit) {
+        // Переносим камеру в глобальную сцену для независимого позиционирования
+        if (pipCamera.parent !== scene) {
+            scene.add(pipCamera);
+        }
+
+        let targetPos = new THREE.Vector3();
+        
+        // Берем позицию кости груди (spine_02) из реальной 3D-модели
+        if (selectedUnit.skeletalAnimationEnabled && selectedUnit.bones['spine_02']) {
+            selectedUnit.bones['spine_02'].getWorldPosition(targetPos);
+        } else {
+            // Фолбэк, если GLTF еще не загрузился (или загрузился цилиндр)
+            selectedUnit.mesh.getWorldPosition(targetPos);
+            targetPos.y += 1.3; // Поднимаем на уровень груди
+        }
+
+        // Вычисляем векторы направления (куда смотрит персонаж в пространстве)
+        const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(selectedUnit.mesh.quaternion).normalize();
+        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(selectedUnit.mesh.quaternion).normalize();
+        const up = new THREE.Vector3(0, 1, 0);
+
+        // Идеальная позиция камеры: от груди -> вправо -> назад -> чуть вверх
+        const camPos = targetPos.clone()
+            .add(right.clone().multiplyScalar(0.4))     // смещение за правое плечо
+            .add(forward.clone().multiplyScalar(-1.2))  // отступаем за спину
+            .add(up.clone().multiplyScalar(0.15));      // поднимаем чуть выше плеча
+
+        // Плавное следование за телом (сглаживает резкие рывки от анимаций и шагов)
+        // 0.3 - коэффициент упругости "steady-cam"
+        pipCamera.position.lerp(camPos, 0.3);
+
+        // Камера должна смотреть всегда "поверх плеча" вперед
+        const lookTarget = targetPos.clone()
+            .add(forward.clone().multiplyScalar(5))     // Фокус в 5 метрах впереди
+            .add(up.clone().multiplyScalar(0.2));       // Чуть выше горизонта
+            
+        pipCamera.lookAt(lookTarget);
+        
+        // Легкий тактический наклон (Dutch angle), чтобы добавить динамики
+        pipCamera.rotation.z = -0.03;
+    }
+    // ------------------------------------------------------------------
+
     if (isGameStarted && pipEnabled) {
         // Отключаем авто-очистку, чтобы камеры не стирали друг друга
         renderer.autoClear = false;
@@ -2777,19 +2817,17 @@ function animate() {
         const pipElem = document.getElementById('pip-container');
         const rect = pipElem.getBoundingClientRect();
         
-        // Перевод координат для WebGL (считает от нижнего левого угла)
         const bottom = window.innerHeight - rect.bottom;
         
         renderer.setScissorTest(true);
         renderer.setScissor(rect.left, bottom, rect.width, rect.height);
         renderer.setViewport(rect.left, bottom, rect.width, rect.height);
         
-        // Очищаем буфер глубины только для окошка, чтобы не было артефактов
         renderer.clearDepth(); 
         renderer.render(scene, pipCamera);
         
         renderer.setScissorTest(false);
-        renderer.autoClear = true; // Возвращаем как было
+        renderer.autoClear = true;
     } else {
         renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.render(scene, camera);
