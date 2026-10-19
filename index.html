@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HYNMOTA: Tactical Main Menu & Selection 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body { margin: 0; padding: 0; overflow: hidden; background-color: #080604; font-family: 'Courier New', monospace; color: #d4a359; }
@@ -185,6 +188,326 @@
             transition: transform 0.8s ease-out, opacity 0.8s ease-out;
             will-change: transform, opacity;
         }
+
+        :root {
+            --ink: #11120f;
+            --panel: rgba(17, 18, 15, 0.94);
+            --paper: #e9e7d8;
+            --muted: #9c9b8c;
+            --acid: #d7ff35;
+            --blood: #ff4b36;
+            --rust: #d06b3d;
+            --line: rgba(233, 231, 216, 0.22);
+            --display-font: 'Bebas Neue', Impact, sans-serif;
+            --utility-font: 'IBM Plex Mono', monospace;
+        }
+
+        * { scrollbar-color: var(--acid) var(--ink); }
+        body {
+            background: var(--ink);
+            color: var(--paper);
+            font-family: var(--utility-font);
+        }
+        button { font-family: var(--utility-font); }
+        body::after {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            content: '';
+            pointer-events: none;
+            opacity: 0.12;
+            background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 4px);
+        }
+
+        #main-menu {
+            align-items: center;
+            justify-content: flex-start;
+            padding: clamp(16px, 5vw, 72px);
+            overflow-y: auto;
+            background:
+                linear-gradient(90deg, rgba(10, 11, 9, 0.98) 0%, rgba(10, 11, 9, 0.88) 46%, rgba(10, 11, 9, 0.28) 100%),
+                repeating-linear-gradient(135deg, transparent 0 18px, rgba(215, 255, 53, 0.025) 18px 20px);
+            backdrop-filter: none;
+        }
+        .menu-box {
+            width: 460px;
+            max-width: min(92vw, 720px);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            margin: auto 0;
+            padding: clamp(24px, 4vw, 46px);
+            border: 1px solid var(--line);
+            border-top: 4px solid var(--acid);
+            border-radius: 2px;
+            background:
+                linear-gradient(135deg, rgba(35, 36, 29, 0.98), rgba(15, 16, 13, 0.98) 62%),
+                var(--panel);
+            box-shadow: 14px 14px 0 rgba(0, 0, 0, 0.48), 0 0 70px rgba(0, 0, 0, 0.35);
+            text-align: left;
+            animation: panel-arrive 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+        #menu-char-select.menu-box { width: min(660px, 92vw); }
+        .menu-kicker {
+            color: var(--blood);
+            font: 600 10px var(--utility-font);
+        }
+        .menu-title {
+            margin: 4px 0 -7px;
+            color: var(--acid);
+            font: 112px/0.82 var(--display-font);
+            letter-spacing: 0;
+            text-shadow: 5px 5px 0 #27291d, 7px 7px 0 var(--blood);
+            transform: skewX(-5deg);
+        }
+        .menu-subtitle {
+            margin-top: 12px;
+            color: var(--paper);
+            font: 600 11px/1.5 var(--utility-font);
+            letter-spacing: 0;
+        }
+        .menu-divider {
+            height: 2px;
+            margin: 22px 0;
+            background: linear-gradient(90deg, var(--acid) 0 25%, var(--blood) 25% 33%, var(--line) 33% 100%);
+        }
+        .btn-menu-primary, .btn-restart {
+            min-height: 54px;
+            padding: 13px 18px;
+            border: 0;
+            border-radius: 1px;
+            background: var(--acid);
+            color: var(--ink);
+            font: 28px/1 var(--display-font);
+            letter-spacing: 0;
+            box-shadow: 5px 5px 0 var(--blood);
+            transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+        }
+        .btn-menu-primary:hover, .btn-restart:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 3px 3px 0 var(--blood);
+            background: var(--paper);
+            color: var(--ink);
+        }
+        .music-toggle-btn {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 2;
+            border: 1px solid var(--acid);
+            border-radius: 1px;
+            background: var(--ink);
+            color: var(--acid);
+            font: 600 10px var(--utility-font);
+        }
+        .char-cards-container { gap: 10px; margin-top: 22px; }
+        .char-card {
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 1px;
+            background: rgba(8, 9, 7, 0.72);
+        }
+        .char-card:hover {
+            border-color: var(--acid);
+            transform: translateY(-3px) rotate(-0.5deg);
+            box-shadow: 4px 5px 0 rgba(215, 255, 53, 0.2);
+        }
+        .char-card-header {
+            color: var(--acid);
+            font: 42px/0.95 var(--display-font);
+            letter-spacing: 0;
+        }
+        .char-card-class { margin: 7px 0 15px; color: var(--rust); font-size: 10px; }
+        .char-card-stats { color: var(--paper); font-size: 10px; line-height: 1.8; }
+        .char-card-stats span { color: var(--muted); }
+        .btn-act {
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid var(--line);
+            border-radius: 1px;
+            background: #22231e;
+            color: var(--paper);
+            font: 600 11px/1.2 var(--utility-font);
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.48);
+        }
+        .btn-act:hover:not(:disabled) {
+            border-color: var(--acid);
+            color: var(--acid);
+            box-shadow: 2px 2px 0 var(--acid);
+            transform: translate(1px, 1px);
+        }
+        .btn-confirm-theme { border-color: var(--acid); background: #293116; color: var(--acid); }
+        .btn-cancel-theme, .btn-shoot-theme { border-color: var(--blood); background: #321b19; color: #ffd8d1; }
+        .btn-melee-theme { border-color: var(--rust); background: #332118; color: #ffc59d; }
+        .btn-ability-theme, .btn-shield-theme { border-color: #70d9d4; background: #142727; color: #a3eeea; }
+        .btn-end-theme { border-color: var(--acid); background: var(--acid); color: var(--ink); }
+        .cost-badge {
+            border: 1px solid currentColor;
+            border-radius: 0;
+            background: transparent;
+            font-size: 9px;
+        }
+
+        #hud-top {
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .hud-panel {
+            min-width: 270px;
+            padding: 13px 15px;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--acid);
+            border-top: 1px solid var(--line);
+            border-radius: 1px;
+            background: var(--panel);
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(12px);
+        }
+        .unit-title { align-items: baseline; gap: 10px; }
+        .unit-name { color: var(--acid); font: 32px/0.95 var(--display-font); letter-spacing: 0; }
+        .unit-class { color: var(--muted); font-size: 9px; }
+        .hp-label { color: var(--muted); font: 600 9px var(--utility-font); }
+        .hp-bar-outer { height: 8px; border: 1px solid var(--line); border-radius: 0; background: #090a08; }
+        .hp-bar-inner { background: var(--acid); }
+        .shield-bar-inner { background: #70d9d4; }
+        .ap-container { color: var(--paper); font-size: 10px; }
+        .ap-dot {
+            width: 16px;
+            height: 6px;
+            border: 0;
+            border-radius: 0;
+            background: var(--acid);
+            box-shadow: 0 0 8px rgba(215, 255, 53, 0.28);
+        }
+        .ap-dot.empty { background: #46473d; box-shadow: none; }
+        .hud-turn-panel { min-width: 184px !important; border-left-color: var(--blood); }
+        .turn-kicker { color: var(--muted); font-size: 9px; font-weight: 700; }
+        #turn-display { font: 28px/1 var(--display-font) !important; }
+
+        #target-panel, #confirm-panel {
+            border: 1px solid var(--line);
+            border-top: 3px solid var(--blood);
+            border-right: 1px solid var(--line);
+            border-radius: 1px;
+            background: var(--panel);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+        }
+        #target-panel { right: 14px; bottom: 120px; min-width: 270px; }
+        #target-panel h3 { color: var(--blood); font: 28px/1 var(--display-font); letter-spacing: 0; }
+        #target-cover { color: var(--muted) !important; font: 10px var(--utility-font) !important; }
+        .hit-rate { color: var(--acid); font: 22px/1 var(--display-font); }
+        #confirm-panel { bottom: 116px; border-top-color: var(--acid); }
+        #confirm-title { color: var(--acid); font: 17px/1.2 var(--display-font); }
+
+        #action-deck { bottom: 14px; gap: 8px; }
+        .deck-frame {
+            gap: 9px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-top: 2px solid var(--acid);
+            border-radius: 1px;
+            background: rgba(13, 14, 11, 0.96);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(12px);
+        }
+        .btn-slot { gap: 5px; }
+        .key-hint { color: var(--muted); font: 600 9px var(--utility-font); }
+        #log-box {
+            bottom: 14px;
+            left: 14px;
+            width: 280px;
+            max-height: 116px;
+            padding: 9px 11px;
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--rust);
+            border-radius: 1px;
+            background: rgba(13, 14, 11, 0.94);
+            color: var(--muted);
+            font: 10px/1.5 var(--utility-font);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+            scrollbar-width: thin;
+        }
+        .log-entry { margin-bottom: 5px; }
+        .log-entry.player { color: #70d9d4; }
+        .log-entry.enemy { color: var(--blood); }
+        .log-entry.hit { color: var(--acid); }
+        .log-entry.ability { color: #70d9d4; }
+        .log-entry.shield { color: #70d9d4; }
+        .log-entry.melee { color: #ff9a62; }
+        .dmg-text { font-family: var(--display-font); font-size: 34px; }
+        #game-over-modal { background: rgba(8, 9, 7, 0.9); backdrop-filter: blur(10px); }
+        .modal-box {
+            border: 1px solid var(--blood);
+            border-top: 4px solid var(--blood);
+            border-radius: 1px;
+            background: #141511;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+        }
+        .modal-box h1 { font: 54px/1 var(--display-font); letter-spacing: 0; }
+        .modal-box p { color: var(--muted); font: 11px/1.6 var(--utility-font); }
+
+        @keyframes panel-arrive {
+            from { opacity: 0; transform: translateY(12px) skewY(-0.5deg); }
+            to { opacity: 1; transform: translateY(0) skewY(0); }
+        }
+        @media (max-width: 760px) {
+            #main-menu {
+                align-items: center;
+                justify-content: center;
+                padding: 54px 12px 16px;
+                background: rgba(10, 11, 9, 0.88);
+            }
+            .menu-box {
+                width: 100%;
+                max-width: 560px;
+                padding: 24px 18px;
+            }
+            #menu-char-select.menu-box { width: 100%; }
+            .menu-title { font-size: clamp(72px, 20vw, 100px); }
+            .char-cards-container { gap: 8px; }
+            .char-card { padding: 12px; }
+            .char-card-header { font-size: 34px; }
+            .char-card-stats { font-size: 9px; }
+            .music-toggle-btn { top: 9px; right: 9px; }
+            #hud-top { top: 8px; left: 8px; right: 8px; gap: 7px; }
+            .hud-panel { min-width: 0; padding: 9px; }
+            #hud-top > .hud-panel:first-child { width: 61%; }
+            .hud-turn-panel { width: 39%; min-width: 0 !important; }
+            .unit-title { align-items: flex-start; flex-direction: column; gap: 2px; margin-bottom: 5px; }
+            .unit-name { font-size: 26px; }
+            .unit-class { font-size: 8px; }
+            .hp-container { margin: 4px 0; }
+            .hp-label { font-size: 8px; }
+            .ap-container { margin-top: 5px; gap: 4px; }
+            .ap-dot { width: 12px; }
+            #turn-display { font-size: 23px !important; }
+            #target-panel { right: 8px; bottom: 130px; min-width: 0; width: min(270px, calc(100vw - 16px)); padding: 12px; }
+            #confirm-panel { bottom: 132px; width: calc(100% - 20px); padding: 10px; }
+            #confirm-panel > div:last-child { gap: 6px !important; }
+            #confirm-panel .btn-act { flex: 1; min-width: 0; padding: 8px 6px; font-size: 9px; }
+            #action-deck { left: 8px; right: 8px; bottom: 8px; transform: none; width: auto; }
+            .deck-frame { width: 100%; gap: 5px; padding: 6px; }
+            .btn-slot { flex: 1; min-width: 0; }
+            .btn-slot .btn-act { width: 100%; min-height: 44px; justify-content: center; padding: 7px 5px; gap: 4px; font-size: 9px; }
+            .btn-slot .icon-svg { display: none; }
+            .cost-badge { display: none; }
+            .deck-frame > div[style*="width: 1px"] { display: none; }
+            #log-box { left: 8px; bottom: 72px; width: min(190px, 48vw); max-height: 76px; font-size: 8px; }
+        }
+        @media (max-width: 390px) {
+            .char-cards-container { flex-direction: column; }
+            .char-card { gap: 10px; }
+            .char-card-stats { line-height: 1.55; }
+            #log-box { width: 44vw; }
+            .key-hint { font-size: 8px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -199,10 +522,11 @@
 
     <!-- ---------------- ГЛАВНОЕ МЕНЮ И ВЫБОР ОПЕРАТОРА ---------------- -->
     <div id="main-menu">
-        <button class="music-toggle-btn" id="music-toggle">🔊 МУЗЫКА: ВКЛ</button>
+        <button class="music-toggle-btn" id="music-toggle">МУЗЫКА / ВКЛ</button>
 
         <!-- ЭКРАН 1: СТАРТОВОЕ МЕНЮ -->
         <div id="menu-primary" class="menu-box">
+            <div class="menu-kicker">ДОК 07 / БЕЗОПАСНОСТИ НЕТ</div>
             <h1 class="menu-title">HYNMOTA</h1>
             <div class="menu-subtitle">DESERT PUNK TACTICS</div>
             <div class="menu-divider"></div>
@@ -210,7 +534,7 @@
         </div>
 
         <!-- ЭКРАН 2: ВЫБОР ПЕРСОНАЖА -->
-        <div id="menu-char-select" class="menu-box" style="display: none; width: 660px; max-width: 95vw;">
+        <div id="menu-char-select" class="menu-box" style="display: none;">
             <div class="menu-subtitle" style="font-size: 16px; color: #ff9d00;">ВЫБОР ОПЕРАТОРА</div>
             <p style="font-size: 11px; color: #a89474; margin: 8px 0 16px 0;">Выберите вашего персонажа. Второй оператор перейдет под управление ИИ.</p>
             
@@ -260,7 +584,7 @@
     </div>
 
     <div id="hud-top">
-        <div class="hud-panel">
+        <div class="hud-panel unit-panel">
             <div class="unit-title">
                 <span class="unit-name" id="unit-name">Якуб</span>
                 <span class="unit-class" id="unit-class">Штурмовик</span>
@@ -278,8 +602,8 @@
             </div>
         </div>
 
-        <div class="hud-panel" style="text-align: right; min-width: 180px;">
-            <div style="font-size: 11px; color: #8b6d43; font-weight: bold; letter-spacing: 1px;">HYNMOTA TACTICS</div>
+        <div class="hud-panel hud-turn-panel">
+            <div class="turn-kicker">HYNMOTA / СЕКТОР 09</div>
             <div style="font-size: 15px; color: #ff9d00; font-weight: bold; margin-top: 4px;" id="turn-display">ХОД ИГРОКА</div>
         </div>
     </div>
@@ -362,20 +686,264 @@ class SoundEngine {
         this.battleMusicTimer = null;
         this.stepIndex = 0;
         this.battleStepIndex = 0;
+        this.master = null;
+        this.musicBus = null;
+        this.sfxBus = null;
+        this.musicDrive = null;
+        this.noiseBuffer = null;
+        this.driveCurve = null;
+        this.resumeRequest = null;
+        this.nextStepTime = 0;
+        this.musicStepDuration = 0;
     }
 
     init() {
+        if (this.ctx && this.ctx.state === 'closed') {
+            this.ctx = null;
+            this.master = null;
+            this.musicBus = null;
+            this.sfxBus = null;
+            this.musicDrive = null;
+            this.noiseBuffer = null;
+            this.driveCurve = null;
+            this.resumeRequest = null;
+        }
+
         if (!this.ctx) {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) this.ctx = new AudioCtx();
+                if (!AudioCtx) return;
+                this.ctx = new AudioCtx();
+                const audioContext = this.ctx;
+                const compressor = this.ctx.createDynamicsCompressor();
+                this.master = this.ctx.createGain();
+                this.musicBus = this.ctx.createGain();
+                this.sfxBus = this.ctx.createGain();
+                this.musicDrive = this.ctx.createWaveShaper();
+                compressor.threshold.value = -16;
+                compressor.knee.value = 8;
+                compressor.ratio.value = 4;
+                compressor.attack.value = 0.004;
+                compressor.release.value = 0.18;
+                this.master.gain.value = 0.72;
+                this.musicBus.gain.value = this.musicEnabled ? 0.48 : 0;
+                this.sfxBus.gain.value = 0.9;
+                this.musicBus.connect(this.musicDrive);
+                this.musicDrive.connect(this.master);
+                this.sfxBus.connect(this.master);
+                this.master.connect(compressor);
+                compressor.connect(this.ctx.destination);
+                const curve = new Float32Array(2048);
+                for (let i = 0; i < curve.length; i++) {
+                    const x = (i * 2) / curve.length - 1;
+                    curve[i] = (Math.PI + 18) * x / (Math.PI + 18 * Math.abs(x));
+                }
+                this.driveCurve = curve;
+                this.musicDrive.curve = curve;
+                this.musicDrive.oversample = '2x';
+                audioContext.addEventListener('statechange', () => {
+                    if (audioContext.state === 'suspended' && !document.hidden && (this.isMusicPlaying || this.isBattleMusicPlaying)) {
+                        this.resumeContext();
+                    }
+                    if (audioContext.state === 'running' && (this.isMusicPlaying || this.isBattleMusicPlaying)) {
+                        this.nextStepTime = audioContext.currentTime + 0.04;
+                    }
+                });
             } catch (err) { console.warn(err); }
         }
-        if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
+        this.resumeContext();
         if (this.ctx && this.ctx.state === 'running') {
             this.unlocked = true;
+        }
+    }
+
+    resumeContext() {
+        if (!this.ctx || this.ctx.state !== 'suspended' || this.resumeRequest) return;
+        const audioContext = this.ctx;
+        this.resumeRequest = audioContext.resume()
+            .catch(err => console.warn('AudioContext resume failed:', err))
+            .finally(() => {
+                if (this.ctx === audioContext) this.resumeRequest = null;
+            });
+    }
+
+    midiToFrequency(note) {
+        return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    getNoiseBuffer() {
+        if (this.noiseBuffer) return this.noiseBuffer;
+        this.noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+        const samples = this.noiseBuffer.getChannelData(0);
+        for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+        return this.noiseBuffer;
+    }
+
+    playNoise(duration, filterType, frequency, volume, bus = this.sfxBus, sweepTo = null, q = 0.7, scheduledTime = null) {
+        const now = scheduledTime === null ? this.ctx.currentTime : scheduledTime;
+        const source = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const envelope = this.ctx.createGain();
+        source.buffer = this.getNoiseBuffer();
+        filter.type = filterType;
+        filter.frequency.setValueAtTime(frequency, now);
+        filter.Q.value = q;
+        if (sweepTo) filter.frequency.exponentialRampToValueAtTime(sweepTo, now + duration);
+        envelope.gain.setValueAtTime(0.001, now);
+        envelope.gain.linearRampToValueAtTime(volume, now + 0.004);
+        envelope.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        source.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(bus);
+        source.start(now);
+        source.stop(now + duration);
+    }
+
+    playTone(startFrequency, endFrequency, duration, wave, volume, bus = this.sfxBus, filterType = 'lowpass') {
+        const now = this.ctx.currentTime;
+        const oscillator = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const envelope = this.ctx.createGain();
+        oscillator.type = wave;
+        oscillator.frequency.setValueAtTime(startFrequency, now);
+        if (endFrequency) oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endFrequency), now + duration);
+        filter.type = filterType;
+        filter.frequency.value = filterType === 'lowpass' ? 3200 : 1800;
+        envelope.gain.setValueAtTime(0.001, now);
+        envelope.gain.linearRampToValueAtTime(volume, now + 0.006);
+        envelope.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        oscillator.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(bus);
+        oscillator.start(now);
+        oscillator.stop(now + duration);
+    }
+
+    playKick(time, strength = 1) {
+        const oscillator = this.ctx.createOscillator();
+        const envelope = this.ctx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(142, time);
+        oscillator.frequency.exponentialRampToValueAtTime(42, time + 0.13);
+        envelope.gain.setValueAtTime(0.24 * strength, time);
+        envelope.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+        oscillator.connect(envelope);
+        envelope.connect(this.musicBus);
+        oscillator.start(time);
+        oscillator.stop(time + 0.17);
+    }
+
+    playSnare(time, strength = 1) {
+        this.playNoise(0.14, 'bandpass', 1850, 0.11 * strength, this.musicBus, 920, 0.8, time);
+        const oscillator = this.ctx.createOscillator();
+        const envelope = this.ctx.createGain();
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(190, time);
+        oscillator.frequency.exponentialRampToValueAtTime(82, time + 0.12);
+        envelope.gain.setValueAtTime(0.11 * strength, time);
+        envelope.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+        oscillator.connect(envelope);
+        envelope.connect(this.musicBus);
+        oscillator.start(time);
+        oscillator.stop(time + 0.15);
+    }
+
+    playHat(time, strength = 1) {
+        this.playNoise(0.045, 'highpass', 7200, 0.035 * strength, this.musicBus, 4800, 0.5, time);
+    }
+
+    playBass(note, time, duration, strength = 1) {
+        const oscillator = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const envelope = this.ctx.createGain();
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(this.midiToFrequency(note), time);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(780, time);
+        filter.frequency.exponentialRampToValueAtTime(320, time + duration);
+        envelope.gain.setValueAtTime(0.001, time);
+        envelope.gain.linearRampToValueAtTime(0.12 * strength, time + 0.012);
+        envelope.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        oscillator.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(this.musicBus);
+        oscillator.start(time);
+        oscillator.stop(time + duration + 0.01);
+    }
+
+    playGuitarChord(note, time, duration, strength = 1) {
+        const filter = this.ctx.createBiquadFilter();
+        const envelope = this.ctx.createGain();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2400, time);
+        filter.frequency.exponentialRampToValueAtTime(1050, time + duration);
+        envelope.gain.setValueAtTime(0.001, time);
+        envelope.gain.linearRampToValueAtTime(0.045 * strength, time + 0.008);
+        envelope.gain.setValueAtTime(0.045 * strength, time + duration * 0.58);
+        envelope.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        filter.connect(envelope);
+        envelope.connect(this.musicBus);
+        [0, 7, 12].forEach((interval, index) => {
+            const oscillator = this.ctx.createOscillator();
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(this.midiToFrequency(note + interval), time);
+            oscillator.detune.value = index === 1 ? -5 : index === 2 ? 6 : 0;
+            oscillator.connect(filter);
+            oscillator.start(time);
+            oscillator.stop(time + duration + 0.01);
+        });
+    }
+
+    playMusicStep(mode, scheduledTime = null) {
+        if (!this.ctx || this.ctx.state === 'closed') this.init();
+        if (!this.ctx || this.ctx.state !== 'running') {
+            this.resumeContext();
+            return;
+        }
+
+        const isBattle = mode === 'battle';
+        const stepIndex = isBattle ? this.battleStepIndex : this.stepIndex;
+        const step = stepIndex % 16;
+        const bar = Math.floor(stepIndex / 16) % 4;
+        const now = scheduledTime === null ? this.ctx.currentTime : scheduledTime;
+        const roots = [38, 41, 33, 36];
+        const riff = [0, 0, 7, 0, 3, 0, 10, 7, 0, 0, 12, 7, 3, 0, 10, 12];
+        const root = roots[bar];
+        const kickSteps = isBattle ? [0, 3, 6, 8, 11, 14] : [0, 8, 14];
+        const guitarSteps = isBattle ? [0, 3, 6, 8, 11, 14, 15] : [0, 6, 8, 14];
+
+        if (kickSteps.includes(step)) this.playKick(now, step === 0 || step === 8 ? 1 : 0.72);
+        if (step === 4 || step === 12) this.playSnare(now, 1);
+        if (isBattle && step === 15) this.playSnare(now, 0.28);
+        if (step % 2 === 0 || (isBattle && step % 4 === 3)) {
+            this.playHat(now, step % 4 === 2 ? 1 : 0.58);
+        }
+
+        if (step % 2 === 0 || step === 7 || step === 15) {
+            const note = root + riff[step];
+            this.playBass(note, now, isBattle ? 0.105 : 0.12, step % 4 === 0 ? 1 : 0.74);
+        }
+        if (guitarSteps.includes(step)) {
+            this.playGuitarChord(root + riff[step], now, isBattle ? 0.15 : 0.12, step % 4 === 0 ? 1 : 0.7);
+        }
+
+        if (isBattle) this.battleStepIndex++;
+        else this.stepIndex++;
+    }
+
+    scheduleMusic(mode) {
+        if (!this.ctx || this.ctx.state === 'closed') this.init();
+        if (!this.ctx || this.ctx.state !== 'running') {
+            this.resumeContext();
+            return;
+        }
+
+        const currentTime = this.ctx.currentTime;
+        if (this.nextStepTime < currentTime) this.nextStepTime = currentTime + 0.03;
+        const scheduleUntil = currentTime + 0.12;
+        while (this.nextStepTime < scheduleUntil) {
+            this.playMusicStep(mode, this.nextStepTime);
+            this.nextStepTime += this.musicStepDuration;
         }
     }
 
@@ -386,87 +954,10 @@ class SoundEngine {
         this.stopBattleMusic();
         this.isMusicPlaying = true;
         this.stepIndex = 0;
-
-        const bpm = 132;
-        const stepTime = (60 / bpm) / 4;
-
-        const bassFreqs = [82.41, 82.41, 82.41, 98.00, 82.41, 82.41, 110.00, 98.00];
-        const synthStabs = [164.81, 0, 196.00, 0, 220.00, 164.81, 0, 146.83];
-
-        this.musicTimer = setInterval(() => {
-            if (!this.isMusicPlaying || !this.ctx) return;
-            const now = this.ctx.currentTime;
-            const s = this.stepIndex % 16;
-
-            if (s === 0 || s === 4 || s === 8 || s === 12) {
-                const kick = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                kick.type = 'sine';
-                kick.frequency.setValueAtTime(140, now);
-                kick.frequency.exponentialRampToValueAtTime(32, now + 0.12);
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-                kick.connect(gain);
-                gain.connect(this.ctx.destination);
-                kick.start(now);
-                kick.stop(now + 0.12);
-            }
-
-            if (s === 4 || s === 12) {
-                const snare = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                snare.type = 'triangle';
-                snare.frequency.setValueAtTime(220, now);
-                snare.frequency.exponentialRampToValueAtTime(80, now + 0.1);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-                snare.connect(gain);
-                gain.connect(this.ctx.destination);
-                snare.start(now);
-                snare.stop(now + 0.1);
-            }
-
-            const bFreq = bassFreqs[s % bassFreqs.length];
-            const bass = this.ctx.createOscillator();
-            const bGain = this.ctx.createGain();
-            const filter = this.ctx.createBiquadFilter();
-
-            bass.type = 'sawtooth';
-            bass.frequency.setValueAtTime(bFreq, now);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(600, now);
-            filter.frequency.exponentialRampToValueAtTime(180, now + stepTime * 0.9);
-
-            bGain.gain.setValueAtTime(0.18, now);
-            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.9);
-
-            bass.connect(filter);
-            filter.connect(bGain);
-            bGain.connect(this.ctx.destination);
-
-            bass.start(now);
-            bass.stop(now + stepTime * 0.9);
-
-            const leadFreq = synthStabs[s % synthStabs.length];
-            if (leadFreq > 0 && s % 2 === 0) {
-                const lead = this.ctx.createOscillator();
-                const lGain = this.ctx.createGain();
-                lead.type = 'square';
-                lead.frequency.setValueAtTime(leadFreq, now);
-
-                lGain.gain.setValueAtTime(0.08, now);
-                lGain.gain.linearRampToValueAtTime(0.005, now + 0.15);
-
-                lead.connect(lGain);
-                lGain.connect(this.ctx.destination);
-
-                lead.start(now);
-                lead.stop(now + 0.15);
-            }
-
-            this.stepIndex++;
-        }, stepTime * 1000);
+        this.musicStepDuration = (60 / 138) / 4;
+        this.nextStepTime = this.ctx.currentTime + 0.04;
+        this.scheduleMusic('menu');
+        this.musicTimer = setInterval(() => this.scheduleMusic('menu'), 25);
     }
 
     stopMenuMusic() {
@@ -475,6 +966,7 @@ class SoundEngine {
             this.musicTimer = null;
         }
         this.isMusicPlaying = false;
+        this.nextStepTime = 0;
     }
 
     startBattleMusic() {
@@ -484,98 +976,10 @@ class SoundEngine {
         this.stopMenuMusic();
         this.isBattleMusicPlaying = true;
         this.battleStepIndex = 0;
-
-        const bpm = 140;
-        const stepTime = (60 / bpm) / 4;
-
-        const bassNotes = [73.42, 73.42, 87.31, 73.42, 98.00, 73.42, 87.31, 65.41];
-        const arpeggio = [146.83, 174.61, 220.00, 293.66];
-
-        this.battleMusicTimer = setInterval(() => {
-            if (!this.isBattleMusicPlaying || !this.ctx) return;
-            const now = this.ctx.currentTime;
-            const s = this.battleStepIndex % 16;
-
-            if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) {
-                const kick = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                kick.type = 'sine';
-                kick.frequency.setValueAtTime(160, now);
-                kick.frequency.exponentialRampToValueAtTime(28, now + 0.1);
-                gain.gain.setValueAtTime(0.35, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-                kick.connect(gain);
-                gain.connect(this.ctx.destination);
-                kick.start(now);
-                kick.stop(now + 0.1);
-            }
-
-            if (s === 4 || s === 12) {
-                const snare = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                snare.type = 'triangle';
-                snare.frequency.setValueAtTime(250, now);
-                snare.frequency.exponentialRampToValueAtTime(60, now + 0.12);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
-                snare.connect(gain);
-                gain.connect(this.ctx.destination);
-                snare.start(now);
-                snare.stop(now + 0.12);
-            }
-
-            const hat = this.ctx.createOscillator();
-            const hGain = this.ctx.createGain();
-            hat.type = 'square';
-            hat.frequency.setValueAtTime(8000, now);
-            hGain.gain.setValueAtTime(s % 4 === 2 ? 0.04 : 0.02, now);
-            hGain.gain.linearRampToValueAtTime(0.001, now + 0.03);
-            hat.connect(hGain);
-            hGain.connect(this.ctx.destination);
-            hat.start(now);
-            hat.stop(now + 0.03);
-
-            const bFreq = bassNotes[Math.floor(s / 2) % bassNotes.length];
-            const bass = this.ctx.createOscillator();
-            const bGain = this.ctx.createGain();
-            const filter = this.ctx.createBiquadFilter();
-
-            bass.type = 'sawtooth';
-            bass.frequency.setValueAtTime(bFreq, now);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(800, now);
-            filter.frequency.exponentialRampToValueAtTime(200, now + stepTime * 0.85);
-
-            bGain.gain.setValueAtTime(0.16, now);
-            bGain.gain.linearRampToValueAtTime(0.01, now + stepTime * 0.85);
-
-            bass.connect(filter);
-            filter.connect(bGain);
-            bGain.connect(this.ctx.destination);
-
-            bass.start(now);
-            bass.stop(now + stepTime * 0.85);
-
-            if (s % 2 === 0) {
-                const arpFreq = arpeggio[(s / 2) % arpeggio.length];
-                const arp = this.ctx.createOscillator();
-                const aGain = this.ctx.createGain();
-                arp.type = 'sawtooth';
-                arp.frequency.setValueAtTime(arpFreq, now);
-
-                aGain.gain.setValueAtTime(0.05, now);
-                aGain.gain.linearRampToValueAtTime(0.005, now + 0.1);
-
-                arp.connect(aGain);
-                aGain.connect(this.ctx.destination);
-
-                arp.start(now);
-                arp.stop(now + 0.1);
-            }
-
-            this.battleStepIndex++;
-        }, stepTime * 1000);
+        this.musicStepDuration = (60 / 158) / 4;
+        this.nextStepTime = this.ctx.currentTime + 0.04;
+        this.scheduleMusic('battle');
+        this.battleMusicTimer = setInterval(() => this.scheduleMusic('battle'), 25);
     }
 
     stopBattleMusic() {
@@ -584,155 +988,75 @@ class SoundEngine {
             this.battleMusicTimer = null;
         }
         this.isBattleMusicPlaying = false;
+        this.nextStepTime = 0;
     }
 
     playClick() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.05);
+        this.playNoise(0.022, 'highpass', 3400, 0.045);
+        this.playTone(520, 260, 0.045, 'square', 0.035);
     }
 
     playStep() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.08);
+        this.playNoise(0.085, 'lowpass', 520, 0.12, this.sfxBus, 120, 0.7);
+        this.playTone(92, 42, 0.09, 'triangle', 0.07);
     }
 
-    playShoot() {
+    playShoot(isHit = false) {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(700, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.15);
+        this.playNoise(0.12, 'bandpass', 1500, 0.2, this.sfxBus, 430, 0.7);
+        this.playTone(118, 38, 0.14, 'triangle', 0.2);
+        if (isHit) this.playNoise(0.09, 'highpass', 3200, 0.12);
     }
 
     playHit() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
+        this.playNoise(0.16, 'bandpass', 820, 0.22, this.sfxBus, 260, 1.1);
+        this.playTone(170, 48, 0.18, 'sawtooth', 0.12);
     }
 
     playMelee() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(900, this.ctx.currentTime + 0.08);
-        osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.18);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.18);
+        this.playNoise(0.16, 'bandpass', 2400, 0.14, this.sfxBus, 340, 0.75);
+        this.playNoise(0.12, 'lowpass', 720, 0.2, this.sfxBus, 150, 0.8);
     }
 
     playPulse() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.35);
+        this.playTone(180, 48, 0.38, 'sawtooth', 0.14);
+        this.playTone(920, 180, 0.32, 'square', 0.06, this.sfxBus, 'bandpass');
+        this.playNoise(0.24, 'highpass', 2400, 0.09, this.sfxBus, 620, 1.2);
     }
 
     playShield() {
         this.init();
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.4);
+        this.playTone(110, 440, 0.42, 'sine', 0.12);
+        this.playTone(660, 990, 0.32, 'triangle', 0.045, this.sfxBus, 'highpass');
+        this.playNoise(0.18, 'highpass', 4100, 0.055, this.sfxBus, 7800, 0.6);
     }
 
     playVictory() {
         this.init();
         if (!this.ctx) return;
-        const notes = [261.63, 329.63, 392.00, 523.25];
-        notes.forEach((freq, i) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.12);
-            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.12);
-            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.12 + 0.35);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + i * 0.12);
-            osc.stop(this.ctx.currentTime + i * 0.12 + 0.35);
-        });
+        const now = this.ctx.currentTime;
+        [45, 48, 52].forEach((note, index) => this.playGuitarChord(note, now + index * 0.16, 0.32, 1));
+        this.playNoise(0.32, 'highpass', 6200, 0.09, this.sfxBus, 3400, 0.5);
     }
 
     playDefeat() {
         this.init();
         if (!this.ctx) return;
-        const notes = [300, 250, 200, 140];
-        notes.forEach((freq, i) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.18);
-            gain.gain.setValueAtTime(0.3, this.ctx.currentTime + i * 0.18);
-            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.18 + 0.4);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + i * 0.18);
-            osc.stop(this.ctx.currentTime + i * 0.18 + 0.4);
-        });
+        const now = this.ctx.currentTime;
+        [45, 43, 41].forEach((note, index) => this.playGuitarChord(note, now + index * 0.2, 0.34, 0.82));
+        this.playNoise(0.4, 'bandpass', 1200, 0.1, this.sfxBus, 160, 0.7);
     }
 }
 const sounds = new SoundEngine();
@@ -919,7 +1243,7 @@ createCover(4, 7, 1.3, 'sos');
 createCover(2, 5, 1.2);
 
 function spawnTracer(startPos, endPos, isHit) {
-    sounds.playShoot();
+    sounds.playShoot(isHit);
     const points = [startPos.clone().add(new THREE.Vector3(0, 1.2, 0)), endPos.clone().add(new THREE.Vector3(0, 1.0, 0))];
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const material = new THREE.LineBasicMaterial({ color: isHit ? 0xffaa00 : 0xff3300, linewidth: 3 });
@@ -1165,6 +1489,19 @@ class Unit {
         this.maxAp = maxAp;
         this.isEnemy = isEnemy;
         this.isStunned = false;
+        this.skeletalAnimationEnabled = false;
+        this.bones = {};
+        this.restPose = {};
+        this.animationType = 'idle';
+        this.animationTime = 0;
+        this.animationDuration = 0;
+        this.animationResolve = null;
+        this.transitionPose = null;
+        this.transitionTime = 0;
+        this.transitionDuration = 0.12;
+        this.poseTargets = {};
+        this.poseEuler = new THREE.Euler();
+        this.poseQuaternion = new THREE.Quaternion();
 
         this.lastKnownPos = null;
         this.patrolTarget = null;
@@ -1194,12 +1531,201 @@ class Unit {
         scene.add(this.mesh);
     }
 
+    bindSkeleton(model) {
+        this.bones = {};
+        this.restPose = {};
+        model.traverse(node => {
+            if (!node.isBone) return;
+            this.bones[node.name] = node;
+            this.restPose[node.name] = node.quaternion.clone();
+        });
+        this.restoreSkeletonPose();
+    }
+
+    restoreSkeletonPose() {
+        Object.keys(this.restPose).forEach(name => {
+            this.bones[name].quaternion.copy(this.restPose[name]);
+        });
+    }
+
+    applyBone(name, x = 0, y = 0, z = 0) {
+        const bone = this.bones[name];
+        const rest = this.restPose[name];
+        if (!bone || !rest) return;
+        this.poseEuler.set(x, y, z, 'XYZ');
+        this.poseQuaternion.setFromEuler(this.poseEuler);
+        bone.quaternion.copy(rest).multiply(this.poseQuaternion);
+    }
+
+    playAnimation(type, duration = 0) {
+        if (!this.skeletalAnimationEnabled || Object.keys(this.bones).length === 0) return null;
+        this.transitionPose = {};
+        Object.keys(this.bones).forEach(name => {
+            this.transitionPose[name] = this.bones[name].quaternion.clone();
+        });
+        this.transitionTime = 0;
+        if (this.animationResolve) {
+            this.animationResolve();
+            this.animationResolve = null;
+        }
+
+        this.animationType = type;
+        this.animationTime = 0;
+        this.animationDuration = duration;
+        if (type === 'idle' || type === 'move' || duration <= 0) return null;
+
+        return new Promise(resolve => {
+            this.animationResolve = resolve;
+        });
+    }
+
+    updateAnimation(delta) {
+        if (!this.skeletalAnimationEnabled) {
+            this.restoreSkeletonPose();
+            return;
+        }
+        if (Object.keys(this.bones).length === 0) return;
+
+        const isLooping = this.animationType === 'idle' || this.animationType === 'move';
+        this.animationTime = isLooping ? this.animationTime + delta : Math.min(this.animationTime + delta, this.animationDuration);
+        const progress = this.animationDuration > 0 ? this.animationTime / this.animationDuration : 0;
+        const pulse = Math.sin(progress * Math.PI);
+        const ease = progress * progress * (3 - 2 * progress);
+        const cycle = this.animationTime * 10;
+
+        Object.keys(this.restPose).forEach(name => this.bones[name].quaternion.copy(this.restPose[name]));
+
+        switch (this.animationType) {
+            case 'idle': {
+                const breath = Math.sin(this.animationTime * 2.2);
+                this.applyBone('spine_01', breath * 0.018, 0, 0);
+                this.applyBone('spine_02', -breath * 0.026, 0, 0);
+                this.applyBone('head', -breath * 0.018, Math.sin(this.animationTime * 0.7) * 0.025, 0);
+                this.applyBone('upperarm_l', 0, 0, 0.025 + breath * 0.02);
+                this.applyBone('upperarm_r', 0, 0, -0.025 - breath * 0.02);
+                break;
+            }
+            case 'move': {
+                const stride = Math.sin(cycle);
+                this.applyBone('pelvis', 0, 0, Math.sin(cycle * 2) * 0.035);
+                this.applyBone('spine_01', Math.abs(stride) * 0.035, 0, -stride * 0.035);
+                this.applyBone('thigh_l', stride * 0.48, 0, 0);
+                this.applyBone('thigh_r', -stride * 0.48, 0, 0);
+                this.applyBone('calf_l', Math.max(0, -stride) * 0.72, 0, 0);
+                this.applyBone('calf_r', Math.max(0, stride) * 0.72, 0, 0);
+                this.applyBone('foot_l', Math.max(0, stride) * -0.25, 0, 0);
+                this.applyBone('foot_r', Math.max(0, -stride) * -0.25, 0, 0);
+                this.applyBone('upperarm_l', -stride * 0.34, 0, 0.04);
+                this.applyBone('upperarm_r', stride * 0.34, 0, -0.04);
+                this.applyBone('lowerarm_l', -0.18, 0, 0);
+                this.applyBone('lowerarm_r', -0.18, 0, 0);
+                break;
+            }
+            case 'shoot': {
+                const aim = 1 - Math.max(0, progress - 0.58) * 0.8;
+                this.applyBone('spine_02', -0.1 * pulse, 0, -0.04 * pulse);
+                this.applyBone('upperarm_l', -0.5 * aim, this.armLift.left * 0.9 * aim, 0.08 * aim);
+                this.applyBone('lowerarm_l', -0.3 * aim, 0, -0.22 * aim);
+                this.applyBone('upperarm_r', -0.68 * aim, this.armLift.right * 0.9 * aim, -0.08 * aim);
+                this.applyBone('lowerarm_r', -0.35 * aim, 0, 0.18 * aim);
+                this.applyBone('head', -0.08 * aim, 0, 0);
+                break;
+            }
+            case 'melee': {
+                const windup = progress < 0.36 ? progress / 0.36 : (1 - progress) / 0.64;
+                const swing = Math.sin(progress * Math.PI);
+                this.applyBone('pelvis', 0, -0.24 * swing, 0);
+                this.applyBone('spine_01', 0.12 * swing, 0.3 * swing, -0.12 * swing);
+                this.applyBone('spine_02', -0.14 * swing, 0.18 * swing, 0);
+                this.applyBone('upperarm_r', -0.8 * windup + 0.9 * swing, this.armLift.right * (0.9 * windup + 0.75 * swing), 0.2 * swing);
+                this.applyBone('lowerarm_r', 1.05 * windup - 0.65 * swing, 0, 0.22);
+                this.applyBone('hand_r', -0.15 * swing, 0, 0.18 * swing);
+                this.applyBone('upperarm_l', 0.12, this.armLift.left * 0.5, 0.48);
+                this.applyBone('lowerarm_l', -0.35, 0, -0.2);
+                this.applyBone('thigh_l', -0.16 * swing, 0, 0);
+                this.applyBone('thigh_r', 0.22 * swing, 0, 0);
+                break;
+            }
+            case 'ability': {
+                this.applyBone('pelvis', -0.08 * pulse, 0, 0);
+                this.applyBone('spine_01', -0.22 * pulse, 0, 0);
+                this.applyBone('spine_02', -0.12 * pulse, 0, 0);
+                this.applyBone('upperarm_l', -0.48 * ease, this.armLift.left * 1.25 * ease, 0);
+                this.applyBone('lowerarm_l', -0.55 * ease, 0, -0.35 * ease);
+                this.applyBone('hand_l', -0.25 * ease, 0, 0.18 * ease);
+                this.applyBone('upperarm_r', -0.48 * ease, this.armLift.right * 1.25 * ease, 0);
+                this.applyBone('lowerarm_r', -0.55 * ease, 0, 0.35 * ease);
+                this.applyBone('hand_r', -0.25 * ease, 0, -0.18 * ease);
+                this.applyBone('head', 0.12 * pulse, 0, 0);
+                break;
+            }
+            case 'shield': {
+                this.applyBone('spine_01', -0.08 * pulse, 0, 0);
+                this.applyBone('upperarm_l', -0.82 * ease, this.armLift.left * 1.35 * ease, 0);
+                this.applyBone('lowerarm_l', -0.6 * ease, 0, -0.3 * ease);
+                this.applyBone('upperarm_r', -0.82 * ease, this.armLift.right * 1.35 * ease, 0);
+                this.applyBone('lowerarm_r', -0.6 * ease, 0, 0.3 * ease);
+                this.applyBone('hand_l', 0, 0, 0.16 * ease);
+                this.applyBone('hand_r', 0, 0, -0.16 * ease);
+                this.applyBone('head', -0.12 * ease, 0, 0);
+                break;
+            }
+            case 'hit': {
+                this.applyBone('spine_01', 0.3 * pulse, 0.12 * pulse, -0.16 * pulse);
+                this.applyBone('spine_02', 0.22 * pulse, -0.08 * pulse, 0.12 * pulse);
+                this.applyBone('head', -0.24 * pulse, 0.12 * pulse, 0.12 * pulse);
+                this.applyBone('upperarm_l', 0.48 * pulse, this.armLift.left * 0.55 * pulse, 0.2 * pulse);
+                this.applyBone('upperarm_r', 0.48 * pulse, this.armLift.right * 0.55 * pulse, -0.2 * pulse);
+                this.applyBone('lowerarm_l', -0.42 * pulse, 0, 0.18 * pulse);
+                this.applyBone('lowerarm_r', -0.42 * pulse, 0, -0.18 * pulse);
+                break;
+            }
+            case 'death': {
+                this.applyBone('pelvis', 0.32 * ease, 0, -0.08 * ease);
+                this.applyBone('spine_01', 0.52 * ease, 0.08 * ease, -0.12 * ease);
+                this.applyBone('spine_02', 0.38 * ease, 0, 0.08 * ease);
+                this.applyBone('head', -0.28 * ease, 0, 0.1 * ease);
+                this.applyBone('upperarm_l', 0.62 * ease, 0, 0.25 * ease);
+                this.applyBone('upperarm_r', 0.62 * ease, 0, 0.25 * ease);
+                this.applyBone('lowerarm_l', 0.32 * ease, 0, 0.2 * ease);
+                this.applyBone('lowerarm_r', 0.32 * ease, 0, -0.2 * ease);
+                this.applyBone('thigh_l', -0.3 * ease, 0, 0);
+                this.applyBone('thigh_r', -0.3 * ease, 0, 0);
+                this.applyBone('calf_l', 0.38 * ease, 0, 0);
+                this.applyBone('calf_r', 0.38 * ease, 0, 0);
+                break;
+            }
+        }
+
+        if (this.transitionPose) {
+            this.transitionTime += delta;
+            const transition = Math.min(this.transitionTime / this.transitionDuration, 1);
+            const blend = transition * transition * (3 - 2 * transition);
+            Object.keys(this.transitionPose).forEach(name => {
+                const bone = this.bones[name];
+                let target = this.poseTargets[name];
+                if (!target) target = this.poseTargets[name] = new THREE.Quaternion();
+                target.copy(bone.quaternion);
+                bone.quaternion.slerpQuaternions(this.transitionPose[name], target, blend);
+            });
+            if (transition >= 1) this.transitionPose = null;
+        }
+
+        if (!isLooping && this.animationTime >= this.animationDuration) {
+            if (this.animationType !== 'death') this.animationType = 'idle';
+            const resolve = this.animationResolve;
+            this.animationResolve = null;
+            if (resolve) resolve();
+        }
+    }
+
     async animateMoveTo(targetX, targetZ) {
         const path = findPath(this.gridX, this.gridZ, targetX, targetZ, this, false);
         if (!path || path.length > this.ap) return false;
 
         isAnimating = true;
         this.ap -= path.length;
+        this.playAnimation('move');
 
         for (let step of path) {
             const startPos = this.mesh.position.clone();
@@ -1237,6 +1763,7 @@ class Unit {
         }
 
         closeTargetPanel();
+        this.playAnimation('idle');
         cancelPendingAction();
         updateUI();
         highlightMoveRange();
@@ -1247,6 +1774,7 @@ class Unit {
     }
 
     async animateRecoil(targetPos) {
+        const animationPromise = this.playAnimation('shoot', 0.38);
         const startPos = this.mesh.position.clone();
         const dir = new THREE.Vector3().subVectors(targetPos, startPos).normalize();
         const recoilPos = startPos.clone().sub(dir.multiplyScalar(0.35));
@@ -1265,18 +1793,20 @@ class Unit {
             };
             requestAnimationFrame(anim);
         });
+        if (animationPromise) await animationPromise;
     }
 
     async animateMeleeLunge(targetPos) {
         const startPos = this.mesh.position.clone();
         const lungePos = new THREE.Vector3().lerpVectors(startPos, targetPos, 0.65);
+        const actionPromise = this.playAnimation('melee', 0.95);
 
         this.mesh.rotation.y = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
 
         const startTime = performance.now();
         await new Promise(r => {
             const anim = (now) => {
-                const p = Math.min((now - startTime) / 250, 1);
+                const p = Math.min((now - startTime) / (actionPromise ? 950 : 250), 1);
                 if (p < 0.4) {
                     this.mesh.position.lerpVectors(startPos, lungePos, p / 0.4);
                     this.mesh.rotation.x = 0.25;
@@ -1290,9 +1820,11 @@ class Unit {
             };
             requestAnimationFrame(anim);
         });
+        if (actionPromise) await actionPromise;
     }
 
     async animateCyberPulse() {
+        const animationPromise = this.playAnimation('ability', 0.8);
         const startY = this.mesh.position.y;
         const startTime = performance.now();
 
@@ -1307,10 +1839,12 @@ class Unit {
             };
             requestAnimationFrame(anim);
         });
+        if (animationPromise) await animationPromise;
     }
 
     async animateTakeDamage() {
         sounds.playHit();
+        const animationPromise = this.playAnimation('hit', 0.48);
         const startPos = this.mesh.position.clone();
         const startTime = performance.now();
 
@@ -1328,9 +1862,17 @@ class Unit {
             };
             requestAnimationFrame(anim);
         });
+        if (animationPromise) await animationPromise;
     }
 
     async animateDeath() {
+        const deathAction = this.playAnimation('death', 1.25);
+        if (deathAction) {
+            await deathAction;
+            scene.remove(this.mesh);
+            return;
+        }
+
         const startTime = performance.now();
         await new Promise(r => {
             const anim = (now) => {
@@ -1397,6 +1939,7 @@ class Unit {
         this.hasSpottedPlayer = false;
         this.mesh.rotation.set(0, 0, 0);
         this.mesh.position.set(this.startX * TILE_SIZE, 0, this.startZ * TILE_SIZE);
+        this.playAnimation('idle');
         if (!scene.children.includes(this.mesh)) {
             scene.add(this.mesh);
         }
@@ -1431,6 +1974,7 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                     model.position.y = -box.min.y;
 
                     unitObj.mesh.add(model);
+                    unitObj.bindSkeleton(model);
 
                     const updatedBox = new THREE.Box3().setFromObject(model);
                     const headY = updatedBox.max.y * 0.85;
@@ -1438,6 +1982,7 @@ function loadModelSafely(unitObj, modelPath, visorColor) {
                     const vLight = new THREE.PointLight(visorColor, 3, 3);
                     vLight.position.set(0, headY, 0.3);
                     unitObj.mesh.add(vLight);
+                    unitObj.playAnimation('idle');
                 } catch (err) { console.warn(err); }
             },
             null,
@@ -1454,14 +1999,14 @@ document.getElementById('music-toggle').addEventListener('click', () => {
     sounds.musicEnabled = !sounds.musicEnabled;
     const btn = document.getElementById('music-toggle');
     if (sounds.musicEnabled) {
-        btn.innerText = '🔊 МУЗЫКА: ВКЛ';
+        btn.innerText = 'МУЗЫКА / ВКЛ';
         if (isGameStarted) {
             sounds.startBattleMusic();
         } else {
             sounds.startMenuMusic();
         }
     } else {
-        btn.innerText = '🔇 МУЗЫКА: ВЫКЛ';
+        btn.innerText = 'МУЗЫКА / ВЫКЛ';
         sounds.stopMenuMusic();
         sounds.stopBattleMusic();
     }
@@ -1759,6 +2304,7 @@ document.getElementById('ability-btn').addEventListener('click', async () => {
         isAnimating = true;
         selectedUnit.ap -= 2;
         selectedUnit.shield = selectedUnit.maxShield;
+        await selectedUnit.playAnimation('shield', 1.2);
 
         spawnShieldVFX(selectedUnit.mesh);
         showFloatingText('+6 ЩИТ!', selectedUnit.mesh.position, '#00ffcc');
@@ -1945,6 +2491,7 @@ async function runEnemyAI() {
 Unit.prototype.animateMoveToStep = async function(stepX, stepZ) {
     isAnimating = true;
     this.ap -= 1;
+    this.playAnimation('move');
 
     const startPos = this.mesh.position.clone();
     const endPos = new THREE.Vector3(stepX * TILE_SIZE, 0, stepZ * TILE_SIZE);
@@ -1978,6 +2525,7 @@ Unit.prototype.animateMoveToStep = async function(stepX, stepZ) {
 
     this.gridX = stepX;
     this.gridZ = stepZ;
+    this.playAnimation('idle');
 
     updateUI();
     highlightMoveRange();
@@ -2124,6 +2672,10 @@ window.addEventListener('resize', () => {
 function animate() {
     requestAnimationFrame(animate);
 
+    const delta = clock.getDelta();
+    yakub.updateAnimation(delta);
+    reva.updateAnimation(delta);
+
     animatedBeacons.forEach(b => {
         b.angle += 0.04;
         b.target.position.x = Math.cos(b.angle) * 3;
@@ -2133,6 +2685,7 @@ function animate() {
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
+const clock = new THREE.Clock();
 animate();
 </script>
 </body>
